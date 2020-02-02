@@ -4,7 +4,7 @@
 xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
 
 # Change the background image using 'feh'
-feh --bg-scale ~/Downloads/marco-xu-zcvWUNrmPBQ-unsplash.jpg
+feh --bg-scale "$HOME/.xmonad/wallpaper.jpg"
 
 # Increase the kebyoard repeat rate and decrease the repeat time.
 xset r rate 200 60
