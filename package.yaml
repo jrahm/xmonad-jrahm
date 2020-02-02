@@ -1,0 +1,16 @@
+name: jrahm-xmonad
+version: 0.0.1
+
+executables:
+  jrahm-xmonad:
+    main: Main.hs
+    source-dirs: src
+
+dependencies:
+  - base >= 4.0.0
+  - xmonad
+  - xmonad-contrib
+  - directory
+  - filepath
+  - process
+  - containers

@@ -1,0 +1,9 @@
+Config {
+    font = "xft:Lato"
+  , position = Top
+  , bgColor = "#202020"
+  , border = BottomB
+  , borderColor = "#202020"
+  , borderWidth = 4
+  , lowerOnStart = True
+}

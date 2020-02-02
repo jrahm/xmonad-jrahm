@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Switch the displays around because the default state is for them to be reversed.
+xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
+
+# Change the background image using 'feh'
+feh --bg-scale ~/Downloads/marco-xu-zcvWUNrmPBQ-unsplash.jpg
+
+# Increase the kebyoard repeat rate and decrease the repeat time.
+xset r rate 200 60
+
+# Run the screensaver so I can lock it.
+nohup xscreensaver & > /dev/null
+
+# Run a compositer to make things a little prettier.
+nohup compton & > /dev/null
