@@ -7,6 +7,7 @@ import System.Directory
 import System.FilePath
 import System.Process
 import Internal.Layout
+import XMonad.Hooks.ManageHelpers
 
 import Internal.Keys
 
@@ -28,8 +29,10 @@ main = do
        , startupHook = do
            spawn fp
        , manageHook = composeAll [
-           className =? "Tilda" --> doFloat
+           isFullscreen --> doFloat
+         , className =? "Tilda" --> doFloat
          , className =? "MPlayer" --> doFloat
+         , className =? "mpv" --> doFloat
          ]
        }
 
