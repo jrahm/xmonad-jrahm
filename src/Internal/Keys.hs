@@ -39,6 +39,7 @@ newKeys =
         , ((modm, xK_r),   (void $ spawn "dmenu_run"))
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
         , ((modm .|. mod1Mask, xK_l), (void $ spawn "xscreensaver-command -lock"))
+        , ((modm .|. shiftMask, xK_c), kill)
         , ((modm, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
         , ((modm, xK_apostrophe), (submap $
