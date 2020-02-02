@@ -27,6 +27,9 @@ main = do
                       myLayout
        , startupHook = do
            spawn fp
+       , manageHook = composeAll [
+           className =? "Tilda" --> doFloat
+         ]
        }
 
   xmonad =<< xmobar config { modMask = mod4Mask }

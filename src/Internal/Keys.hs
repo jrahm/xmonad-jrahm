@@ -36,6 +36,8 @@ newKeys =
         [ ((modm, xK_F12), (void $ spawn "spotify-control next"))
         , ((modm, xK_F11), (void $ spawn "spotify-control prev"))
         , ((modm, xK_F10), (void $ spawn "spotify-control play"))
+        , ((modm, xK_r),   (void $ spawn "dmenu_run"))
+        , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
         , ((modm .|. mod1Mask, xK_l), (void $ spawn "xscreensaver-command -lock"))
         , ((modm, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
