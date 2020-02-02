@@ -29,6 +29,7 @@ main = do
            spawn fp
        , manageHook = composeAll [
            className =? "Tilda" --> doFloat
+         , className =? "MPlayer" --> doFloat
          ]
        }
 

@@ -40,6 +40,7 @@ newKeys =
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
         , ((modm .|. mod1Mask, xK_l), (void $ spawn "xscreensaver-command -lock"))
         , ((modm .|. shiftMask, xK_c), kill)
+        , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
         , ((modm, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
         , ((modm, xK_apostrophe), (submap $
