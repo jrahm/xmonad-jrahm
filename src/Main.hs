@@ -11,6 +11,8 @@ import XMonad.Hooks.ManageHelpers
 import Text.Printf
 
 import Internal.Keys
+import Internal.LayoutDraw
+
 
 main = do
   -- Execute some commands.
@@ -34,6 +36,7 @@ main = do
          , className =? "Tilda" --> doFloat
          , className =? "MPlayer" --> doFloat
          , className =? "mpv" --> doFloat
+         , className =? "gnubby_ssh_prompt" --> doFloat
          ]
        }
   let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
@@ -45,7 +48,7 @@ main = do
                  ppCurrent = xmobarColor "#ffffff" "red" . printf "%s"
                , ppVisible = xmobarColor "#8888ff" "" . printf "%s"
                , ppHidden  = xmobarColor "#888888" "" . printf "%s"
-               , ppWsSep = " · "
+               , ppWsSep = "<fn=1><fc=#808080> · </fc></fn>"
                , ppTitle =
                    xmobarColor "#8888ff" "" . printf "%s" .
                       (printf "<fn=1>%s</fn>" :: String -> String)

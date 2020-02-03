@@ -27,7 +27,8 @@ newKeys =
               zip ['1'..] (XMonad.workspaces config)
 
           gotoWorkspace :: Char -> X ()
-          gotoWorkspace ch =
+          gotoWorkspace ch = do
+            saveLastMark markContext
             mapM_ (windows . W.greedyView) (Map.lookup ch workspacesByInt)
 
           in

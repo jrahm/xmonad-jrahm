@@ -1,11 +1,12 @@
 Config
    { font = "xft:Ubuntu Mono:size=14"
    , additionalFonts = ["xft:Lato:style=bold"]        -- default: []
-   , borderColor = "white"
-   , border = NoBorder
+   , borderColor = "#000000"
+   , border = BottomB
+   , borderWidth = 2
    , bgColor = "black"
    , fgColor = "white"
-   , alpha = 230                 -- default: 255
+   , alpha = 210                 -- default: 255
    , position = TopSize C 100 50
    , textOffset = -1             -- default: -1
    , iconOffset = -1             -- default: -1
@@ -18,5 +19,5 @@ Config
    , overrideRedirect = False    -- default: True
    , sepChar = "%"
    , alignSep = "}{"
-   , template = "          %StdinReader% }{ <fc=#8888ff>%date%</fc>           "
+   , template = "     %StdinReader% }{<fc=#404040>   ────   </fc><fc=#8888ff>%date%</fc>     "
    }

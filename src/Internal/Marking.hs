@@ -54,24 +54,26 @@ markCurrentWindow (MarkContext ioref) mark = do
 
   saveMarkState =<< liftIO (readIORef ioref)
 
-jumpToLast :: MarkContext -> X ()
-jumpToLast (MarkContext ioref) = do
+saveLastMark :: MarkContext -> X ()
+saveLastMark (MarkContext ioref) =
   withFocused $ \win -> do
-    m <- markLast <$> (liftIO $ readIORef ioref)
-    liftIO $ modifyIORef ioref (\state -> state { markLast = Just win })
-    mapM_ focus m
+      liftIO $ modifyIORef ioref (\state -> state { markLast = Just win })
+
+jumpToLast :: MarkContext -> X ()
+jumpToLast ctx@(MarkContext ioref) = do
+  m <- markLast <$> (liftIO $ readIORef ioref)
+  saveLastMark ctx
+  mapM_ focus m
 
   saveMarkState =<< liftIO (readIORef ioref)
 
 jumpToMark :: MarkContext -> Mark -> X ()
-jumpToMark (MarkContext ioref) mark = do
-  withFocused $ \win -> do
-    MarkState {markStateMap = m} <- liftIO $ readIORef ioref
-    case Map.lookup mark m of
-      Nothing -> return ()
-      Just w -> do
-        liftIO $ modifyIORef ioref $ \state ->
-          state { markLast = Just win }
-        focus w
+jumpToMark ctx@(MarkContext ioref) mark = do
+  MarkState {markStateMap = m} <- liftIO $ readIORef ioref
+  case Map.lookup mark m of
+    Nothing -> return ()
+    Just w -> do
+      saveLastMark ctx
+      focus w
 
   saveMarkState =<< liftIO (readIORef ioref)
