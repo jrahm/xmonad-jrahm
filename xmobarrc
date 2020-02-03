@@ -1,9 +1,22 @@
-Config {
-    font = "xft:Lato"
-  , position = Top
-  , bgColor = "#202020"
-  , border = BottomB
-  , borderColor = "#202020"
-  , borderWidth = 4
-  , lowerOnStart = True
-}
+Config
+   { font = "xft:Ubuntu Mono:size=14"
+   , additionalFonts = ["xft:Lato:style=bold"]        -- default: []
+   , borderColor = "white"
+   , border = NoBorder
+   , bgColor = "black"
+   , fgColor = "white"
+   , alpha = 230                 -- default: 255
+   , position = TopSize C 100 50
+   , textOffset = -1             -- default: -1
+   , iconOffset = -1             -- default: -1
+   , lowerOnStart = True
+   , pickBroadest = False        -- default: False
+   , persistent = True
+   , hideOnStart = False
+   , iconRoot = "/usr/local/google/home/rahm/.xmonad/resources"  -- default: "."
+   , allDesktops = True          -- default: True
+   , overrideRedirect = False    -- default: True
+   , sepChar = "%"
+   , alignSep = "}{"
+   , template = "          %StdinReader% }{ <fc=#8888ff>%date%</fc>           "
+   }

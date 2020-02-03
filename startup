@@ -13,4 +13,9 @@ xset r rate 200 60
 nohup xscreensaver & > /dev/null
 
 # Run a compositer to make things a little prettier.
+
+if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
+  killall compton
+fi
+
 nohup compton & > /dev/null

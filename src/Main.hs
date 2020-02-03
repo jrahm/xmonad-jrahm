@@ -8,6 +8,7 @@ import System.FilePath
 import System.Process
 import Internal.Layout
 import XMonad.Hooks.ManageHelpers
+import Text.Printf
 
 import Internal.Keys
 
@@ -35,5 +36,21 @@ main = do
          , className =? "mpv" --> doFloat
          ]
        }
+  let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
 
-  xmonad =<< xmobar config { modMask = mod4Mask }
+  xmonad =<<
+    statusBar
+      "xmobar"
+      xmobarPP {
+                 ppCurrent = xmobarColor "#ffffff" "red" . printf "%s"
+               , ppVisible = xmobarColor "#8888ff" "" . printf "%s"
+               , ppHidden  = xmobarColor "#888888" "" . printf "%s"
+               , ppWsSep = " · "
+               , ppTitle =
+                   xmobarColor "#8888ff" "" . printf "%s" .
+                      (printf "<fn=1>%s</fn>" :: String -> String)
+
+               , ppSep = xmobarColor "#404040" "" "   ────   "
+               }
+      toggleStructsKey
+      config { modMask = mod4Mask }
