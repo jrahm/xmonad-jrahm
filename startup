@@ -19,3 +19,6 @@ if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
 fi
 
 nohup compton & > /dev/null
+
+# Set the cursor to not be a big X
+xsetroot -cursor_name left_ptr
