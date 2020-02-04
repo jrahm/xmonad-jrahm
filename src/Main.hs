@@ -12,6 +12,7 @@ import Text.Printf
 
 import Internal.Keys
 import Internal.LayoutDraw
+import Data.List (partition, isPrefixOf)
 
 
 main = do
@@ -59,6 +60,8 @@ main = do
 
                , ppSep = xmobarColor "#404040" "" "   ────   "
                , ppExtras = [showLayout]
+               , ppOrder =  \ss ->
+                   let (icons, etc) = partition ("<icon"`isPrefixOf`) ss in icons ++ etc
                }
       toggleStructsKey
       config { modMask = mod4Mask }
