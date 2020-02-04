@@ -19,5 +19,23 @@ Config
    , overrideRedirect = False    -- default: True
    , sepChar = "%"
    , alignSep = "}{"
-   , template = "     %StdinReader% }{<fc=#404040>   ────   </fc><fc=#8888ff>%date%</fc>     "
+   , template = "     %StdinReader% }{<fc=#404040>   ────   </fc><fc=#ffffff>%battery%</fc>    <fc=#404040>────</fc>    <fc=#8888ff>%date%</fc>     "
+   , commands = [
+     Run Battery [ "--template" , "<fn=1><acstatus></fn>"
+                 , "--Low"      , "10"        -- units: %
+                 , "--High"     , "80"        -- units: %
+                 , "--low"      , "darkred"
+                 , "--normal"   , "darkorange"
+                 , "--high"     , "darkgreen"
+
+                 , "--" -- battery specific options
+                           -- discharging status
+                           , "-o"	, "<left>% - <timeleft>"
+                           -- AC "on" status
+                           , "-O"	, "<fc=#dAA520>Charging</fc>"
+                           -- charged status
+                           , "-i"	, "<fc=#006000>Charged</fc>"
+                 ] 50,
+       Run StdinReader
+     ]
    }
