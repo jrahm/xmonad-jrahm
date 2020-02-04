@@ -18,6 +18,7 @@ main = do
   -- Execute some commands.
   homeDir <- getHomeDirectory
   let fp = homeDir </> ".xmonad" </> "startup"
+  let theLayout = myLayout
 
   config <-
     applyKeys $ def
@@ -27,8 +28,10 @@ main = do
        , keys = \config -> mempty
        , focusedBorderColor = "#FFFFFF"
        , normalBorderColor = "#000000"
-       , layoutHook = spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
-                      myLayout
+       , layoutHook =
+              spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
+              InterceptLayout $
+                myLayout
        , startupHook = do
            spawn fp
        , manageHook = composeAll [
@@ -39,6 +42,7 @@ main = do
          , className =? "gnubby_ssh_prompt" --> doFloat
          ]
        }
+
   let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
 
   xmonad =<<
@@ -54,6 +58,7 @@ main = do
                       (printf "<fn=1>%s</fn>" :: String -> String)
 
                , ppSep = xmobarColor "#404040" "" "   ────   "
+               , ppExtras = [showLayout]
                }
       toggleStructsKey
       config { modMask = mod4Mask }

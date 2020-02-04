@@ -14,3 +14,6 @@ dependencies:
   - filepath
   - process
   - containers
+  - cairo
+  - bytestring
+  - cryptohash

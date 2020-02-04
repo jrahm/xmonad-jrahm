@@ -10,11 +10,11 @@ import XMonad
 import qualified XMonad.StackSet as W
 
 myLayout =
-  spiral (6/7) |||
-  Center 0.7 |||
-  Tall 1 (3/100) (1/2) |||
-  ThreeCol 1 (3/100) (1/2) |||
-  Grid
+    spiral (6/7) |||
+    Center 0.7 |||
+    Tall 1 (3/100) (1/2) |||
+    ThreeCol 1 (3/100) (1/2) |||
+    Grid
 
 
 data Center a =
@@ -23,9 +23,8 @@ data Center a =
   }
   deriving (Show, Read)
 
-instance LayoutClass Center a where
-  doLayout l (Rectangle x y w h) stack =
-    
+instance (Show a) => LayoutClass Center a where
+  doLayout l r@(Rectangle x y w h) stack = do
     let wf = fromIntegral w
         hf = fromIntegral h
         x' = (wf - wf * proportion l) / 2
@@ -43,14 +42,16 @@ instance LayoutClass Center a where
 
         portion = fromIntegral $ nWin `div` 6
         winRem = fromIntegral $ nWin `mod` 6
-    in
-      return $
-        (zip (W.integrate stack) (
-          (:) middleRect $
-             (divRect topRect (portion * 2))
-             ++ (divRect rightRect portion)
-             ++ (divRect bottomRect (portion * 2))
-             ++ (divRect leftRect (portion + winRem))), Just l)
+      in do
+      let ret =
+            (zip (W.integrate stack) (
+              (:) middleRect $
+                 (divRect topRect (portion * 2))
+                 ++ (divRect rightRect portion)
+                 ++ (divRect bottomRect (portion * 2))
+                 ++ (divRect leftRect (portion + winRem))), Just l)
+      liftIO $ writeFile "/tmp/wtf.txt" (description l ++ ": " ++ show (fst ret))
+      return ret
    where
     divRect (Rectangle x y w h) n =
       if h > w
