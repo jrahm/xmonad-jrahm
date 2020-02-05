@@ -8,7 +8,9 @@ import System.FilePath
 import System.Process
 import Internal.Layout
 import XMonad.Hooks.ManageHelpers
+import XMonad.Layout.IndependentScreens
 import Text.Printf
+import XMonad.Hooks.EwmhDesktops
 
 import Internal.Keys
 import Internal.LayoutDraw
@@ -36,12 +38,13 @@ main = do
        , startupHook = do
            spawn fp
        , manageHook = composeAll [
-           isFullscreen --> doFloat
+           isFullscreen --> doFullFloat
          , className =? "Tilda" --> doFloat
          , className =? "MPlayer" --> doFloat
          , className =? "mpv" --> doFloat
          , className =? "gnubby_ssh_prompt" --> doFloat
          ]
+           , handleEventHook = fullscreenEventHook
        }
 
   let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
@@ -59,6 +62,7 @@ main = do
                       (printf "<fn=1>%s</fn>" :: String -> String)
 
                , ppSep = xmobarColor "#404040" "" "   ────   "
+               , ppLayout = const ""
                , ppExtras = [showLayout]
                , ppOrder =  \ss ->
                    let (icons, etc) = partition ("<icon"`isPrefixOf`) ss in icons ++ etc
