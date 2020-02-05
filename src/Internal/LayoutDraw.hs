@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, MultiParamTypeClasses,
-ScopedTypeVariables #-}
+ScopedTypeVariables, BangPatterns #-}
 module Internal.LayoutDraw where
 
 import System.Process
@@ -27,13 +27,18 @@ showLayout = do
     xpm <- drawPng layout
     return $ Just $ printf "<icon=%s/>" xpm
 
+iconSize :: (Num a) => (a, a)
+iconSize = (64, 32)
+
 drawPng :: (LayoutClass layout Window) => layout Window -> X String
 drawPng l = do
     dir <- getXMonadDir
     let sixWindows = [1..(4 :: Window)]
     let stack = differentiate sixWindows
     (rects, _) <-
-          runLayout (Workspace "0" l stack) (Rectangle 0 0 (64 * 30) (32 * 30))
+          runLayout
+            (Workspace "0" l stack)
+            (Rectangle 0 0 (fst iconSize * 30) (snd iconSize * 30))
     return ()
 
     let descr = description l
@@ -80,7 +85,7 @@ drawPng l = do
 
             surfaceWriteToPNG surface filepathPng
 
-            _ <- readProcessWithExitCode
+            (!_) <- readProcessWithExitCode
               "/usr/bin/convert"
               [filepathPng, filepathXpm]
               ""
@@ -88,8 +93,9 @@ drawPng l = do
 
     return filepathXpm
     where
-      padR (Rectangle x y w h) =
-        Rectangle x y (max 1 $ w - 120) (max 1 $ h - 120)
+      padR = id
+      -- padR (Rectangle x y w h) =
+      --   Rectangle x y (max 1 $ w - 120) (max 1 $ h - 120)
 
 newtype InterceptLayout l a =
     InterceptLayout {

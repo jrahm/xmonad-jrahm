@@ -40,7 +40,7 @@ instance (Show a) => LayoutClass Center a where
         nWin = length (W.integrate stack)
         winsTop = nWin `div` 8
 
-        portion = fromIntegral $ nWin `div` 6
+        portion = fromIntegral $ (guard 1 (nWin `div` 6))
         winRem = fromIntegral $ nWin `mod` 6
       in do
       let ret =
@@ -50,9 +50,11 @@ instance (Show a) => LayoutClass Center a where
                  ++ (divRect rightRect portion)
                  ++ (divRect bottomRect (portion * 2))
                  ++ (divRect leftRect (portion + winRem))), Just l)
-      liftIO $ writeFile "/tmp/wtf.txt" (description l ++ ": " ++ show (fst ret))
       return ret
    where
+    guard n 0 = n
+    guard _ n = n
+
     divRect (Rectangle x y w h) n =
       if h > w
         then

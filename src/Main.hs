@@ -25,7 +25,7 @@ main = do
 
   config <-
     applyKeys $ def
-       { terminal    = "st"
+       { terminal    = "sakura"
        , modMask     = mod4Mask
        , borderWidth = 0
        , keys = \config -> mempty

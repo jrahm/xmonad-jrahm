@@ -1,5 +1,9 @@
 module Internal.Keys where
 
+import Text.Printf
+import Internal.PromptConfig
+import Data.List
+import System.IO
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Internal.Marking
@@ -9,6 +13,10 @@ import XMonad
 import Control.Monad
 import XMonad.Actions.WindowNavigation
 import qualified XMonad.StackSet as W
+import XMonad.Prompt.Input
+import XMonad.Prompt.Shell
+import XMonad.Prompt
+import Data.Char
 
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
 
@@ -17,6 +25,12 @@ applyKeys config@(XConfig {modMask = modm}) = do
    ks <- newKeys
    withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
      config { keys = ks }
+
+data WinPrompt = WinPrompt
+
+instance XPrompt WinPrompt where
+    showXPrompt _ = "[Window] "
+    commandToComplete _ = id
 
 newKeys :: IO (KeyMap l)
 newKeys =
@@ -33,6 +47,39 @@ newKeys =
           shiftToWorkspace ch = do
             windows $ W.shift $ return ch
 
+          fuzzyCompletion s1 s0 =
+            let ws = filter (not . all isSpace) $ words (map toLower s1)
+                l0 = map toLower s0 in
+                 all (`isInfixOf`l0) ws
+
+          getString = runQuery $ do
+              t <- title
+              a <- appName
+              return $
+                if map toLower a `isInfixOf` map toLower t
+                  then t
+                  else printf "%s - %s" a t
+
+          windowJump = do
+              windowTitlesToWinId <- withWindowSet $ \ss ->
+                Map.fromList <$>
+                  mapM (\wid -> (,) <$> getString wid <*> return wid)
+                       (W.allWindows ss)
+
+              mkXPrompt
+                WinPrompt
+                xpConfig
+                (\input -> do
+                  return $ filter (fuzzyCompletion input) (Map.keys windowTitlesToWinId)) $ \str -> do
+                    saveLastMark markContext
+                    case Map.lookup str windowTitlesToWinId of
+                        Just w -> focus w
+                        Nothing ->
+                          case filter (fuzzyCompletion str) (Map.keys windowTitlesToWinId) of
+                              [s] ->
+                                mapM_ focus (Map.lookup s windowTitlesToWinId)
+                              _ -> return ()
+
           in
 
       Map.fromList
@@ -47,6 +94,7 @@ newKeys =
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
         , ((modm, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
+        , ((modm, xK_w), windowJump)
         , ((modm, xK_apostrophe), (submap $
               Map.insert
                 (modm, xK_apostrophe)
