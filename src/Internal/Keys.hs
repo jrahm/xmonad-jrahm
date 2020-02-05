@@ -26,10 +26,12 @@ newKeys =
             Map.fromList $
               zip ['1'..] (XMonad.workspaces config)
 
-          gotoWorkspace :: Char -> X ()
           gotoWorkspace ch = do
             saveLastMark markContext
-            mapM_ (windows . W.greedyView) (Map.lookup ch workspacesByInt)
+            windows $ W.greedyView $ return ch
+
+          shiftToWorkspace ch = do
+            windows $ W.shift $ return ch
 
           in
 
@@ -50,7 +52,8 @@ newKeys =
                 (modm, xK_apostrophe)
                 (jumpToLast markContext)
                 (mapAlpha modm (jumpToMark markContext))))
-        , ((modm, xK_g), (submap $ mapNumbers 0 gotoWorkspace))
+        , ((modm, xK_g), (submap $ mapNumbersAndAlpha 0 gotoWorkspace))
+        , ((modm .|. shiftMask, xK_g), (submap $ mapNumbersAndAlpha 0 shiftToWorkspace))
 
         , ((modm .|. shiftMask, xK_bracketleft), sendMessage (IncMasterN (-1)))
         , ((modm .|. shiftMask, xK_bracketright), sendMessage (IncMasterN 1))
@@ -61,6 +64,11 @@ newKeys =
 
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
         ]
+
+mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
+mapNumbersAndAlpha km fn =
+    mapNumbers km fn
+      <> mapAlpha km fn
 
 mapNumbers :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
 mapNumbers km fn =

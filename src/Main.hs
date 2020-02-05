@@ -44,6 +44,7 @@ main = do
          , className =? "mpv" --> doFloat
          , className =? "gnubby_ssh_prompt" --> doFloat
          ]
+       , workspaces = map return (['0'..'9'] ++ ['a'..'z'])
            , handleEventHook = fullscreenEventHook
        }
 
