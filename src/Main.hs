@@ -33,19 +33,20 @@ main = do
        , normalBorderColor = "#000000"
        , layoutHook =
               spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
-              InterceptLayout $
                 myLayout
        , startupHook = do
            spawn fp
        , manageHook = composeAll [
            isFullscreen --> doFullFloat
          , className =? "Tilda" --> doFloat
+         , className =? "yakuake" --> doFloat
          , className =? "MPlayer" --> doFloat
          , className =? "mpv" --> doFloat
          , className =? "gnubby_ssh_prompt" --> doFloat
          ]
        , workspaces = map return (['0'..'9'] ++ ['a'..'z'])
-           , handleEventHook = fullscreenEventHook
+       , handleEventHook = fullscreenEventHook
+       , focusFollowsMouse = False
        }
 
   let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
@@ -66,7 +67,8 @@ main = do
                , ppLayout = const ""
                , ppExtras = [showLayout]
                , ppOrder =  \ss ->
-                   let (icons, etc) = partition ("<icon"`isPrefixOf`) ss in icons ++ etc
+                   let (icons, etc) = partition ("<icon"`isPrefixOf`) ss
+                       in icons ++ etc
                }
       toggleStructsKey
       config { modMask = mod4Mask }

@@ -16,6 +16,7 @@ import qualified XMonad.StackSet as W
 import XMonad.Prompt.Input
 import XMonad.Prompt.Shell
 import XMonad.Prompt
+import XMonad.Util.Scratchpad
 import Data.Char
 
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
@@ -85,6 +86,7 @@ newKeys =
       Map.fromList
         [ ((modm, xK_F12), (void $ spawn "spotify-control next"))
         , ((modm, xK_F11), (void $ spawn "spotify-control prev"))
+        , ((modm, xK_semicolon), scratchpadSpawnActionTerminal "scratchpad")
         , ((modm, xK_F10), (void $ spawn "spotify-control play"))
         , ((modm, xK_r),   (void $ spawn "dmenu_run"))
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
