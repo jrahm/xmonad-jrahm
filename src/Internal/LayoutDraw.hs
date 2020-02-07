@@ -71,7 +71,7 @@ drawPng l = do
               setLineCap LineCapButt
               setLineJoin LineJoinMiter
 
-              forM_ (zip (map (second padR) rects) colors) $
+              forM_ (reverse $ zip (map (second padR) rects) colors) $
                 \((wind, Rectangle x y w h), (r, g, b)) -> do
                   setSourceRGBA r g b 1
 

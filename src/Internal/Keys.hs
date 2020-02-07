@@ -115,6 +115,9 @@ newKeys =
 
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
         , ((modm, xK_z), sendMessage ToggleZoom)
+
+        , ((modm, xK_Tab), windows W.focusDown)
+        , ((modm .|. shiftMask, xK_Tab), windows W.focusUp)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())

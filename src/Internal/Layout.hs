@@ -1,6 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module Internal.Layout where 
 
+import XMonad.Layout.Circle
+import XMonad.Layout.Accordion
 import Control.Applicative
 import XMonad.Layout.Spacing
 import Data.List
@@ -20,6 +22,8 @@ myLayout =
       spiral (6/7) |||
       Tall 1 (3/100) (1/2) |||
       ThreeCol 1 (3/100) (1/2) |||
+      Circle |||
+      Accordion ||| 
       Grid
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
