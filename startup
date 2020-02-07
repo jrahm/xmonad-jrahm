@@ -10,7 +10,7 @@ feh --bg-scale "$HOME/.xmonad/wallpaper.jpg"
 xset r rate 200 60
 
 # Run the screensaver so I can lock it.
-nohup xscreensaver & > /dev/null
+nohup xscreensaver --no-splash & > /dev/null
 
 # Run a compositer to make things a little prettier.
 
