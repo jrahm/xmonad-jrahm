@@ -1,59 +1,77 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module Internal.Layout where 
 
+import Control.Applicative
+import XMonad.Layout.Spacing
+import Data.List
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.Grid
 import XMonad.Layout
+import XMonad.Layout.LayoutModifier
 import XMonad
+import XMonad.Core
 
 import qualified XMonad.StackSet as W
 
 myLayout =
-    spiral (6/7) |||
-    Tall 1 (3/100) (1/2) |||
-    ThreeCol 1 (3/100) (1/2) |||
-    Grid
+  ModifiedLayout (Zoomable False 0.05 0.05) $
+    spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
+      spiral (6/7) |||
+      Tall 1 (3/100) (1/2) |||
+      ThreeCol 1 (3/100) (1/2) |||
+      Grid
 
-data Manual = Manual RectSet
+data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
 
-data RectSet =
-      RectSet {
-                rectSetWidth :: Float -- 0.0 - 1.0 fraction of the float.
-              , rectSetHeight :: Float
-              , subRects :: RectChildren
-              }
+instance Message ResizeZoom where
 
-data RectChildren =
-      Leaf { boundWindow :: Maybe Window } |
-      Children { children :: [RectSet] }
+data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused window.
+  deriving (Show, Read)
 
-data RectSetD =
-    LeafD {
-      boundWindowD :: Maybe Window
-    , parent :: RectParentD
-    } |
-    Parent { self :: RectParentD }
+data ToggleZoom = ToggleZoom
+  deriving (Typeable)
 
-data RectParentD =
-    RectParentD {
-      currentChild :: RectSetD
+data AlterZoom = AlterZoom Float Float
+  deriving (Typeable)
 
-    , leftChildren :: [RectSetD]
-    , rightChildren :: [RectSetD]
+instance Message ToggleZoom where
 
-    , rectSetDWidth :: Float
-    , rectSetDHeight :: Float
+instance Message AlterZoom where
 
-    , parentRect :: Maybe RectParentD
-    }
+instance (Eq a) => LayoutModifier Zoomable a where
+  redoLayout (Zoomable doit ws hs) (Rectangle x y w h) stack returned =
+    if doit
+      then
+        let focused = W.focus <$> stack
+            (zoomed, rest) = partition ((==focused) . Just . fst) returned
+         in case zoomed of
+              [] -> return (rest, Nothing)
+              ((fwin, _):_) ->  return $ ((fwin, Rectangle (x + wp) (y + hp) (w - fromIntegral (wp * 2)) (h - fromIntegral (hp * 2))) : rest, Nothing)
 
-derive :: RectSet -> Window -> Maybe RectSetD
-derive (RectSet w h sub) = undefined
+      else return (returned, Nothing)
+    where
+      wp = floor $ (fromIntegral w) * ws
+      hp = floor $ (fromIntegral h) * hs
 
-getWindowRect :: Window -> X (Maybe Rectangle)
-getWindowRect win = withDisplay $ \dpy -> do
-    (_, x, y, w, h, bw, _) <- liftIO $ getGeometry dpy win
-    catchX
-      (return $ Just $ Rectangle x y (w + 2 * bw) (h + 2 * bw))
-      (return Nothing)
+  handleMessOrMaybeModifyIt self@(Zoomable showing sw sh) mess =
+    return $
+      (handleResize <$> fromMessage mess)
+        <|> ((Left . handleZoom) <$> fromMessage mess)
+      where
+        handleResize r =
+          if showing
+            then Left $ Zoomable showing (guard $ sw + d) (guard $ sh + d)
+            else Right $ case r of
+                   ShrinkZoom -> SomeMessage Shrink
+                   ExpandZoom -> SomeMessage Expand
+
+          where d = (case r of
+                      ShrinkZoom -> -1
+                      ExpandZoom -> 1) * 0.02
+
+        handleZoom ToggleZoom = Zoomable (not showing) sw sh
+
+        guard f | f > 1 = 1
+                | f < 0 = 0
+                | otherwise = f

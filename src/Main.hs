@@ -31,11 +31,8 @@ main = do
        , keys = \config -> mempty
        , focusedBorderColor = "#FFFFFF"
        , normalBorderColor = "#000000"
-       , layoutHook =
-              spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
-                myLayout
-       , startupHook = do
-           spawn fp
+       , layoutHook = myLayout
+       , startupHook = spawn fp
        , manageHook = composeAll [
            isFullscreen --> doFullFloat
          , className =? "Tilda" --> doFloat

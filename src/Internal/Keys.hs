@@ -1,5 +1,6 @@
 module Internal.Keys where
 
+import Internal.Layout
 import Text.Printf
 import Internal.PromptConfig
 import Data.List
@@ -107,12 +108,13 @@ newKeys =
 
         , ((modm .|. shiftMask, xK_bracketleft), sendMessage (IncMasterN (-1)))
         , ((modm .|. shiftMask, xK_bracketright), sendMessage (IncMasterN 1))
-        , ((modm, xK_bracketleft), sendMessage Shrink)
-        , ((modm, xK_bracketright), sendMessage Expand)
+        , ((modm, xK_bracketleft), sendMessage ShrinkZoom)
+        , ((modm, xK_bracketright), sendMessage ExpandZoom)
 
         , ((modm, xK_space), sendMessage NextLayout)
 
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
+        , ((modm, xK_z), sendMessage ToggleZoom)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
