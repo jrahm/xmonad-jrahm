@@ -62,6 +62,10 @@ newKeys =
                   then t
                   else printf "%s - %s" a t
 
+          screenJump fn n = do
+            saveLastMark markContext
+            flip whenJust (windows . fn) =<< screenWorkspace n
+
           windowJump = do
               windowTitlesToWinId <- withWindowSet $ \ss ->
                 Map.fromList <$>
@@ -118,6 +122,14 @@ newKeys =
 
         , ((modm, xK_Tab), windows W.focusDown)
         , ((modm .|. shiftMask, xK_Tab), windows W.focusUp)
+
+        , ((modm, xK_a), screenJump W.view 2)
+        , ((modm, xK_o), screenJump W.view 0)
+        , ((modm, xK_e), screenJump W.view 1)
+
+        , ((modm .|. shiftMask, xK_a), screenJump W.shift 2)
+        , ((modm .|. shiftMask, xK_o), screenJump W.shift 0)
+        , ((modm .|. shiftMask, xK_e), screenJump W.shift 1)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
