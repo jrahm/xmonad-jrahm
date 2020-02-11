@@ -1,13 +1,13 @@
 Config
    { font = "xft:Ubuntu Mono:size=14"
    , additionalFonts = ["xft:Lato:style=bold"]        -- default: []
-   , borderColor = "#000000"
+   , borderColor = "#ff6c00"
    , border = BottomB
-   , borderWidth = 2
+   , borderWidth = 1
    , bgColor = "black"
    , fgColor = "white"
-   , alpha = 210                 -- default: 255
-   , position = TopSize C 100 50
+   , alpha = 250                 -- default: 255
+   , position = TopSize C 95 50
    , textOffset = -1             -- default: -1
    , iconOffset = -1             -- default: -1
    , lowerOnStart = True
