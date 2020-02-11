@@ -35,12 +35,7 @@ data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused
 data ToggleZoom = ToggleZoom
   deriving (Typeable)
 
-data AlterZoom = AlterZoom Float Float
-  deriving (Typeable)
-
 instance Message ToggleZoom where
-
-instance Message AlterZoom where
 
 instance (Eq a) => LayoutModifier Zoomable a where
   redoLayout (Zoomable doit ws hs) (Rectangle x y w h) stack returned =
