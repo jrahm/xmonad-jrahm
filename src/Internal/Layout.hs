@@ -22,8 +22,7 @@ myLayout =
       spiral (6/7) |||
       Tall 1 (3/100) (1/2) |||
       ThreeCol 1 (3/100) (1/2) |||
-      Circle |||
-      Accordion ||| 
+      Full |||
       Grid
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
