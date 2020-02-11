@@ -1,24 +1,27 @@
 module Internal.Keys where
 
-import Internal.Layout
-import Text.Printf
-import Internal.PromptConfig
-import Data.List
-import System.IO
-import qualified Data.Map as Map
-import Data.Map (Map)
-import Internal.Marking
-import XMonad.Actions.Submap
-import XMonad.Util.CustomKeys
-import XMonad
+import Control.Applicative
+import Prelude hiding ((!!))
 import Control.Monad
+import Data.Char
+import Data.List hiding ((!!))
+import Data.List.Safe ((!!))
+import Data.Map (Map)
+import Internal.Layout
+import Internal.Marking
+import Internal.PromptConfig
+import System.IO
+import Text.Printf
+import XMonad
+import XMonad.Actions.Submap
 import XMonad.Actions.WindowNavigation
-import qualified XMonad.StackSet as W
+import XMonad.Prompt
 import XMonad.Prompt.Input
 import XMonad.Prompt.Shell
-import XMonad.Prompt
+import XMonad.Util.CustomKeys
 import XMonad.Util.Scratchpad
-import Data.Char
+import qualified Data.Map as Map
+import qualified XMonad.StackSet as W
 
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
 
@@ -33,6 +36,18 @@ data WinPrompt = WinPrompt
 instance XPrompt WinPrompt where
     showXPrompt _ = "[Window] "
     commandToComplete _ = id
+
+getHorizontallyOrderedScreens ::
+  W.StackSet wid l a ScreenId ScreenDetail ->
+    [W.Screen wid l a ScreenId ScreenDetail]
+-- ^ Returns a list of screens ordered from leftmost to rightmost.
+getHorizontallyOrderedScreens windowSet =
+    flip sortBy screens $ \sc1 sc2 ->
+      let (SD (Rectangle x1 _ _ _)) = W.screenDetail sc1
+          (SD (Rectangle x2 _ _ _)) = W.screenDetail sc2
+          in x1 `compare` x2
+    where
+      screens = W.current windowSet : W.visible windowSet
 
 newKeys :: IO (KeyMap l)
 newKeys =
@@ -62,9 +77,13 @@ newKeys =
                   then t
                   else printf "%s - %s" a t
 
-          screenJump fn n = do
+          withScreen :: (WorkspaceId -> WindowSet -> WindowSet) -> Int -> X ()
+          withScreen fn n = do
             saveLastMark markContext
-            flip whenJust (windows . fn) =<< screenWorkspace n
+            windows $ \windowSet ->
+              case (getHorizontallyOrderedScreens windowSet !! n) of
+                Nothing -> windowSet
+                Just screen -> fn (W.tag $ W.workspace screen) windowSet
 
           windowJump = do
               windowTitlesToWinId <- withWindowSet $ \ss ->
@@ -123,13 +142,13 @@ newKeys =
         , ((modm, xK_Tab), windows W.focusDown)
         , ((modm .|. shiftMask, xK_Tab), windows W.focusUp)
 
-        , ((modm, xK_a), screenJump W.view 2)
-        , ((modm, xK_o), screenJump W.view 0)
-        , ((modm, xK_e), screenJump W.view 1)
+        , ((modm, xK_a), withScreen W.view 0)
+        , ((modm, xK_o), withScreen W.view 1)
+        , ((modm, xK_e), withScreen W.view 2)
 
-        , ((modm .|. shiftMask, xK_a), screenJump W.shift 2)
-        , ((modm .|. shiftMask, xK_o), screenJump W.shift 0)
-        , ((modm .|. shiftMask, xK_e), screenJump W.shift 1)
+        , ((modm .|. shiftMask, xK_a), withScreen W.shift 0)
+        , ((modm .|. shiftMask, xK_o), withScreen W.shift 1)
+        , ((modm .|. shiftMask, xK_e), withScreen W.shift 2)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
