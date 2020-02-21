@@ -1,5 +1,6 @@
 module Internal.Keys where
 
+import Debug.Trace
 import Control.Applicative
 import Prelude hiding ((!!))
 import Control.Monad
@@ -63,6 +64,22 @@ newKeys =
 
           shiftToWorkspace ch = do
             windows $ W.shift $ return ch
+
+          swapWs f t (W.Workspace t' l s) | t' == f = W.Workspace t l s
+          swapWs f t (W.Workspace t' l s) | t' == t = W.Workspace f l s
+          swapWs _ _ ws = ws
+
+          swapSc f t (W.Screen ws a b) = W.Screen (swapWs f t ws) a b
+
+          swapWorkspace :: Char -> X ()
+          swapWorkspace toChar = do
+              windows $ \ss -> do
+                let from  = W.tag $ W.workspace $ W.current ss
+                    to = [toChar] in
+                  (W.StackSet (swapSc from to $ W.current ss)
+                              (map (swapSc from to) $ W.visible ss)
+                              (map (swapWs from to) $ W.hidden ss)
+                              (W.floating ss))
 
           fuzzyCompletion s1 s0 =
             let ws = filter (not . all isSpace) $ words (map toLower s1)
@@ -128,6 +145,7 @@ newKeys =
                 (mapAlpha modm (jumpToMark markContext))))
         , ((modm, xK_g), (submap $ mapNumbersAndAlpha 0 gotoWorkspace))
         , ((modm .|. shiftMask, xK_g), (submap $ mapNumbersAndAlpha 0 shiftToWorkspace))
+        , ((modm .|. shiftMask .|. mod1Mask, xK_g), (submap $ mapNumbersAndAlpha 0 swapWorkspace))
 
         , ((modm .|. shiftMask, xK_bracketleft), sendMessage (IncMasterN (-1)))
         , ((modm .|. shiftMask, xK_bracketright), sendMessage (IncMasterN 1))
