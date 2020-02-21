@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=XMonad
+Comment=A lightweigt, customizable, tiling window manager.
+Exec=/home/rahm/.local/bin/start-xmonad
+TryExec=/home/rahm/.local/bin/start-xmonad
+Icon=
+Type=Application
+
