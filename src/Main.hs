@@ -27,7 +27,7 @@ main = do
     applyKeys $ def
        { terminal    = "sakura"
        , modMask     = mod4Mask
-       , borderWidth = 1
+       , borderWidth = 2
        , keys = \config -> mempty
        , focusedBorderColor = "#ff6c00"
        , normalBorderColor = "#ffd9bf"
