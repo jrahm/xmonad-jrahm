@@ -132,7 +132,7 @@ newKeys =
         , ((modm, xK_r),   (void $ spawn "dmenu_run"))
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
         , ((modm .|. mod1Mask, xK_l), (void $ spawn "xsecurelock"))
-        , ((modm .|. mod1Mask, xK_s), (void $ spawn "xsecurelock && pm-suspend"))
+        , ((modm .|. mod1Mask, xK_s), (void $ spawn "sudo systemctl suspend"))
         , ((modm .|. shiftMask, xK_c), kill)
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
         , ((modm, xK_t),  (void $ spawn (terminal config)))
