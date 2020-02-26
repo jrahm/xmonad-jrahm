@@ -18,7 +18,7 @@ if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
   killall compton
 fi
 
-nohup compton & > /dev/null
+nohup compton --backend glx --paint-on-overlay & > /dev/null
 
 # Set the cursor to not be a big X
 xsetroot -cursor_name left_ptr
