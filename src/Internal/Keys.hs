@@ -164,6 +164,10 @@ newKeys =
         , ((modm, xK_o), withScreen W.view 1)
         , ((modm, xK_e), withScreen W.view 2)
 
+        , ((modm .|. shiftMask .|. mod1Mask, xK_a), withScreen W.greedyView 0)
+        , ((modm .|. shiftMask .|. mod1Mask, xK_o), withScreen W.greedyView 1)
+        , ((modm .|. shiftMask .|. mod1Mask, xK_e), withScreen W.greedyView 2)
+
         , ((modm .|. shiftMask, xK_a), withScreen W.shift 0)
         , ((modm .|. shiftMask, xK_o), withScreen W.shift 1)
         , ((modm .|. shiftMask, xK_e), withScreen W.shift 2)
