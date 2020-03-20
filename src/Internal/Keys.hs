@@ -1,5 +1,7 @@
+{-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import Data.Maybe (isJust)
 import Debug.Trace
 import Control.Applicative
 import Prelude hiding ((!!))
@@ -31,6 +33,8 @@ applyKeys config@(XConfig {modMask = modm}) = do
    ks <- newKeys
    withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
      config { keys = ks }
+
+newtype Selector = Selector (forall a. (Eq a) => a -> [a] -> a)
 
 data WinPrompt = WinPrompt
 
@@ -70,6 +74,25 @@ newKeys =
           swapWs _ _ ws = ws
 
           swapSc f t (W.Screen ws a b) = W.Screen (swapWs f t ws) a b
+
+          relativeWorkspaceShift :: Selector ->  X ()
+          relativeWorkspaceShift (Selector selector) = do
+            windows $ \ss -> do
+              let tags = sort $ (W.tag <$> filter (isJust . W.stack) (W.workspaces ss))
+                  from = W.tag $ W.workspace $ W.current ss
+                  to = selector from tags
+
+              W.greedyView to ss
+
+          nextWorkspace = Selector select
+            where select n (x:y:xs) | n == x = y
+                  select n (x:xs) = select n xs
+                  select n _ = n
+
+          prevWorkspace = Selector select
+            where select n (x:y:xs) | n == y = x
+                  select n (x:xs) = select n xs
+                  select n _ = n
 
           swapWorkspace :: Char -> X ()
           swapWorkspace toChar = do
@@ -153,6 +176,9 @@ newKeys =
         , ((modm, xK_bracketright), sendMessage ExpandZoom)
 
         , ((modm, xK_space), sendMessage NextLayout)
+
+        , ((modm, xK_n), relativeWorkspaceShift nextWorkspace)
+        , ((modm, xK_p), relativeWorkspaceShift prevWorkspace)
 
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
         , ((modm, xK_z), sendMessage ToggleZoom)
