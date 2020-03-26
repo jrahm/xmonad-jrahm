@@ -32,14 +32,30 @@ import Internal.Lib
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
 
 applyKeys :: XConfig l -> IO (XConfig l)
-applyKeys config@(XConfig {modMask = modm}) = do
-   ks <- newKeys
-   withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
-     config { keys = ks }
+applyKeys config@(XConfig {modMask = modm}) =
+  withNewMarkContext $ \markContext -> do
+    ks <- newKeys markContext
+    ms <- newMouse markContext
+    withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
+      config { keys = ks, mouseBindings = ms }
 
-newKeys :: IO (KeyMap l)
-newKeys =
-  withNewMarkContext $ \markContext ->
+newMouse :: MarkContext -> IO (XConfig l -> Map (KeyMask, Button) (Window -> X ()))
+newMouse markContext =
+    return $ \config@(XConfig {modMask = modm}) ->
+      Map.fromList [
+        ((modm, button1), \w -> focus w >> mouseMoveWindow w >> windows W.shiftMaster)
+      , ((modm, button2), windows . (W.shiftMaster .) . W.focusWindow)
+      , ((modm, button3), \w -> focus w >> mouseResizeWindow w >> windows W.shiftMaster)
+
+      , ((modm, 6), const (relativeWorkspaceShift prev))
+      , ((modm, 7), const (relativeWorkspaceShift next))
+
+      , ((modm, 8), const (relativeWorkspaceShift prev))
+      , ((modm, 9), const (relativeWorkspaceShift next))
+      ]
+
+newKeys :: MarkContext -> IO (KeyMap l)
+newKeys markContext =
     return $ \config@(XConfig {modMask = modm}) ->
       Map.fromList
         [ ((modm, xK_F12), (void $ spawn "spotify-control next"))
@@ -99,7 +115,7 @@ newKeys =
 
         -- Buttons programmed on my mouse.
         , ((shiftMask, xK_F1), withFocused $ windows . W.sink)
-        , ((shiftMask, xK_F2), kill)
+        , ((shiftMask, xK_F2), sendMessage ToggleZoom)
         , ((shiftMask, xK_F3), kill)
         ]
 
