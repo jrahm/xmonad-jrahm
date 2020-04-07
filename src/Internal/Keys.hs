@@ -113,6 +113,10 @@ newKeys markContext =
         , ((modm .|. shiftMask, xK_o), runXPlus markContext config (withScreen W.shift 1))
         , ((modm .|. shiftMask, xK_e), runXPlus markContext config (withScreen W.shift 2))
 
+        , ((modm .|. mod1Mask, xK_a), runXPlus markContext config (withScreen W.greedyView 0))
+        , ((modm .|. mod1Mask, xK_o), runXPlus markContext config (withScreen W.greedyView 1))
+        , ((modm .|. mod1Mask, xK_e), runXPlus markContext config (withScreen W.greedyView 2))
+
         -- Buttons programmed on my mouse.
         , ((shiftMask, xK_F1), withFocused $ windows . W.sink)
         , ((shiftMask, xK_F2), sendMessage ToggleZoom)
