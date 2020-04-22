@@ -1,6 +1,8 @@
 {-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import System.Process
+import XMonad.Util.Ungrab
 import Internal.XPlus
 import Data.Maybe (isJust)
 import Debug.Trace
@@ -53,6 +55,12 @@ newMouse markContext =
       , ((modm, 8), const (relativeWorkspaceShift prev))
       , ((modm, 9), const (relativeWorkspaceShift next))
       ]
+
+click :: X ()
+click = do
+  (dpy, root) <- asks $ (,) <$> display <*> theRoot
+  (_, _, window, _, _, _, _, _) <- io $ queryPointer dpy root
+  focus window
 
 newKeys :: MarkContext -> IO (KeyMap l)
 newKeys markContext =
@@ -118,9 +126,9 @@ newKeys markContext =
         , ((modm .|. mod1Mask, xK_e), runXPlus markContext config (withScreen W.greedyView 2))
 
         -- Buttons programmed on my mouse.
-        , ((shiftMask, xK_F1), withFocused $ windows . W.sink)
-        , ((shiftMask, xK_F2), sendMessage ToggleZoom)
-        , ((shiftMask, xK_F3), kill)
+        , ((shiftMask, xK_F1), click >> (withFocused $ windows . W.sink))
+        , ((shiftMask, xK_F2), click >> sendMessage ToggleZoom)
+        , ((shiftMask, xK_F3), click >> kill)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())

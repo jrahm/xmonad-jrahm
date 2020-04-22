@@ -44,6 +44,7 @@ main = do
        , workspaces = map return (['0'..'9'] ++ ['a'..'z'])
        , handleEventHook = fullscreenEventHook
        , focusFollowsMouse = False
+       , clickJustFocuses = False
        }
 
   let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
