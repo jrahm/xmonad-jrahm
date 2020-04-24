@@ -1,5 +1,10 @@
+{-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import System.Process
+import XMonad.Util.Ungrab
+import Internal.XPlus
+import Data.Maybe (isJust)
 import Debug.Trace
 import Control.Applicative
 import Prelude hiding ((!!))
@@ -24,106 +29,42 @@ import XMonad.Util.Scratchpad
 import qualified Data.Map as Map
 import qualified XMonad.StackSet as W
 
+import Internal.Lib
+
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
 
 applyKeys :: XConfig l -> IO (XConfig l)
-applyKeys config@(XConfig {modMask = modm}) = do
-   ks <- newKeys
-   withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
-     config { keys = ks }
+applyKeys config@(XConfig {modMask = modm}) =
+  withNewMarkContext $ \markContext -> do
+    ks <- newKeys markContext
+    ms <- newMouse markContext
+    withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
+      config { keys = ks, mouseBindings = ms }
 
-data WinPrompt = WinPrompt
-
-instance XPrompt WinPrompt where
-    showXPrompt _ = "[Window] "
-    commandToComplete _ = id
-
-getHorizontallyOrderedScreens ::
-  W.StackSet wid l a ScreenId ScreenDetail ->
-    [W.Screen wid l a ScreenId ScreenDetail]
--- ^ Returns a list of screens ordered from leftmost to rightmost.
-getHorizontallyOrderedScreens windowSet =
-    flip sortBy screens $ \sc1 sc2 ->
-      let (SD (Rectangle x1 _ _ _)) = W.screenDetail sc1
-          (SD (Rectangle x2 _ _ _)) = W.screenDetail sc2
-          in x1 `compare` x2
-    where
-      screens = W.current windowSet : W.visible windowSet
-
-newKeys :: IO (KeyMap l)
-newKeys =
-  withNewMarkContext $ \markContext ->
+newMouse :: MarkContext -> IO (XConfig l -> Map (KeyMask, Button) (Window -> X ()))
+newMouse markContext =
     return $ \config@(XConfig {modMask = modm}) ->
-      let workspacesByInt =
-            Map.fromList $
-              zip ['1'..] (XMonad.workspaces config)
+      Map.fromList [
+        ((modm, button1), \w -> focus w >> mouseMoveWindow w >> windows W.shiftMaster)
+      , ((modm, button2), windows . (W.shiftMaster .) . W.focusWindow)
+      , ((modm, button3), \w -> focus w >> mouseResizeWindow w >> windows W.shiftMaster)
 
-          gotoWorkspace ch = do
-            saveLastMark markContext
-            windows $ W.greedyView $ return ch
+      , ((modm, 6), const (relativeWorkspaceShift prev))
+      , ((modm, 7), const (relativeWorkspaceShift next))
 
-          shiftToWorkspace ch = do
-            windows $ W.shift $ return ch
+      , ((modm, 8), const (relativeWorkspaceShift prev))
+      , ((modm, 9), const (relativeWorkspaceShift next))
+      ]
 
-          swapWs f t (W.Workspace t' l s) | t' == f = W.Workspace t l s
-          swapWs f t (W.Workspace t' l s) | t' == t = W.Workspace f l s
-          swapWs _ _ ws = ws
+click :: X ()
+click = do
+  (dpy, root) <- asks $ (,) <$> display <*> theRoot
+  (_, _, window, _, _, _, _, _) <- io $ queryPointer dpy root
+  focus window
 
-          swapSc f t (W.Screen ws a b) = W.Screen (swapWs f t ws) a b
-
-          swapWorkspace :: Char -> X ()
-          swapWorkspace toChar = do
-              windows $ \ss -> do
-                let from  = W.tag $ W.workspace $ W.current ss
-                    to = [toChar] in
-                  (W.StackSet (swapSc from to $ W.current ss)
-                              (map (swapSc from to) $ W.visible ss)
-                              (map (swapWs from to) $ W.hidden ss)
-                              (W.floating ss))
-
-          fuzzyCompletion s1 s0 =
-            let ws = filter (not . all isSpace) $ words (map toLower s1)
-                l0 = map toLower s0 in
-                 all (`isInfixOf`l0) ws
-
-          getString = runQuery $ do
-              t <- title
-              a <- appName
-              return $
-                if map toLower a `isInfixOf` map toLower t
-                  then t
-                  else printf "%s - %s" a t
-
-          withScreen :: (WorkspaceId -> WindowSet -> WindowSet) -> Int -> X ()
-          withScreen fn n = do
-            saveLastMark markContext
-            windows $ \windowSet ->
-              case (getHorizontallyOrderedScreens windowSet !! n) of
-                Nothing -> windowSet
-                Just screen -> fn (W.tag $ W.workspace screen) windowSet
-
-          windowJump = do
-              windowTitlesToWinId <- withWindowSet $ \ss ->
-                Map.fromList <$>
-                  mapM (\wid -> (,) <$> getString wid <*> return wid)
-                       (W.allWindows ss)
-
-              mkXPrompt
-                WinPrompt
-                xpConfig
-                (\input -> do
-                  return $ filter (fuzzyCompletion input) (Map.keys windowTitlesToWinId)) $ \str -> do
-                    saveLastMark markContext
-                    case Map.lookup str windowTitlesToWinId of
-                        Just w -> focus w
-                        Nothing ->
-                          case filter (fuzzyCompletion str) (Map.keys windowTitlesToWinId) of
-                              [s] ->
-                                mapM_ focus (Map.lookup s windowTitlesToWinId)
-                              _ -> return ()
-
-          in
-
+newKeys :: MarkContext -> IO (KeyMap l)
+newKeys markContext =
+    return $ \config@(XConfig {modMask = modm}) ->
       Map.fromList
         [ ((modm, xK_F12), (void $ spawn "spotify-control next"))
         , ((modm, xK_F11), (void $ spawn "spotify-control prev"))
@@ -137,15 +78,24 @@ newKeys =
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
         , ((modm, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
-        , ((modm, xK_w), windowJump)
+        , ((modm, xK_w), runXPlus markContext config windowJump)
         , ((modm, xK_apostrophe), (submap $
               Map.insert
                 (modm, xK_apostrophe)
                 (jumpToLast markContext)
                 (mapAlpha modm (jumpToMark markContext))))
-        , ((modm, xK_g), (submap $ mapNumbersAndAlpha 0 gotoWorkspace))
-        , ((modm .|. shiftMask, xK_g), (submap $ mapNumbersAndAlpha 0 shiftToWorkspace))
-        , ((modm .|. shiftMask .|. mod1Mask, xK_g), (submap $ mapNumbersAndAlpha 0 swapWorkspace))
+
+        , ((modm, xK_g), (submap $
+            mapNumbersAndAlpha 0 (
+              runXPlus markContext config . gotoWorkspace)))
+
+        , ((modm .|. shiftMask, xK_g), (submap $
+            mapNumbersAndAlpha 0 (
+              runXPlus markContext config . shiftToWorkspace)))
+
+        , ((modm .|. shiftMask .|. mod1Mask, xK_g), (submap $
+            mapNumbersAndAlpha 0 (
+              runXPlus markContext config . swapWorkspace)))
 
         , ((modm .|. shiftMask, xK_bracketleft), sendMessage (IncMasterN (-1)))
         , ((modm .|. shiftMask, xK_bracketright), sendMessage (IncMasterN 1))
@@ -154,23 +104,31 @@ newKeys =
 
         , ((modm, xK_space), sendMessage NextLayout)
 
+        , ((modm, xK_n), relativeWorkspaceShift next)
+        , ((modm, xK_p), relativeWorkspaceShift prev)
+
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
         , ((modm, xK_z), sendMessage ToggleZoom)
 
         , ((modm, xK_Tab), windows W.focusDown)
         , ((modm .|. shiftMask, xK_Tab), windows W.focusUp)
 
-        , ((modm, xK_a), withScreen W.view 0)
-        , ((modm, xK_o), withScreen W.view 1)
-        , ((modm, xK_e), withScreen W.view 2)
+        , ((modm, xK_a), runXPlus markContext config (withScreen W.view 0))
+        , ((modm, xK_o), runXPlus markContext config (withScreen W.view 1))
+        , ((modm, xK_e), runXPlus markContext config (withScreen W.view 2))
 
-        , ((modm .|. shiftMask .|. mod1Mask, xK_a), withScreen W.greedyView 0)
-        , ((modm .|. shiftMask .|. mod1Mask, xK_o), withScreen W.greedyView 1)
-        , ((modm .|. shiftMask .|. mod1Mask, xK_e), withScreen W.greedyView 2)
+        , ((modm .|. shiftMask, xK_a), runXPlus markContext config (withScreen W.shift 0))
+        , ((modm .|. shiftMask, xK_o), runXPlus markContext config (withScreen W.shift 1))
+        , ((modm .|. shiftMask, xK_e), runXPlus markContext config (withScreen W.shift 2))
 
-        , ((modm .|. shiftMask, xK_a), withScreen W.shift 0)
-        , ((modm .|. shiftMask, xK_o), withScreen W.shift 1)
-        , ((modm .|. shiftMask, xK_e), withScreen W.shift 2)
+        , ((modm .|. mod1Mask, xK_a), runXPlus markContext config (withScreen W.greedyView 0))
+        , ((modm .|. mod1Mask, xK_o), runXPlus markContext config (withScreen W.greedyView 1))
+        , ((modm .|. mod1Mask, xK_e), runXPlus markContext config (withScreen W.greedyView 2))
+
+        -- Buttons programmed on my mouse.
+        , ((shiftMask, xK_F1), click >> (withFocused $ windows . W.sink))
+        , ((shiftMask, xK_F2), click >> sendMessage ToggleZoom)
+        , ((shiftMask, xK_F3), click >> kill)
         ]
 
 mapNumbersAndAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
