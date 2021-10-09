@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module Internal.Layout where 
 
+import XMonad.Hooks.ManageDocks
 import XMonad.Layout.Circle
 import XMonad.Layout.Accordion
 import Control.Applicative
@@ -18,7 +19,7 @@ import qualified XMonad.StackSet as W
 
 myLayout =
   ModifiedLayout (Zoomable False 0.05 0.05) $
-    spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
+    spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts $
       spiral (6/7) |||
       Tall 1 (3/100) (1/2) |||
       ThreeCol 1 (3/100) (1/2) |||

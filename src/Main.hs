@@ -21,11 +21,10 @@ main = do
   -- Execute some commands.
   homeDir <- getHomeDirectory
   let fp = homeDir </> ".xmonad" </> "startup"
-  let theLayout = myLayout
 
   config <-
     applyKeys $ def
-       { terminal    = "sakura"
+       { terminal    = "alacritty"
        , modMask     = mod4Mask
        , borderWidth = 2
        , keys = \config -> mempty
