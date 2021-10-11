@@ -31,12 +31,15 @@ main = do
        , focusedBorderColor = "#ff6c00"
        , normalBorderColor = "#ffd9bf"
        , layoutHook = myLayout
-       , startupHook = spawn fp
+       , startupHook = do
+          ewmhDesktopsStartup
+          spawn fp
        , manageHook = composeAll [
            isFullscreen --> doFullFloat
          , className =? "Tilda" --> doFloat
          , className =? "yakuake" --> doFloat
          , className =? "MPlayer" --> doFloat
+         , title =? "Event Tester" --> doFloat
          , className =? "mpv" --> doFloat
          , className =? "gnubby_ssh_prompt" --> doFloat
          ]

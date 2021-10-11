@@ -149,6 +149,16 @@ mapNumbers km fn =
   , ((km, xK_7), fn '7')
   , ((km, xK_8), fn '8')
   , ((km, xK_9), fn '9')
+  , ((km, xK_bracketright), fn '6')
+  , ((km, xK_exclam), fn '8')
+  , ((km, xK_bracketleft), fn '7')
+  , ((km, xK_braceleft), fn '5')
+  , ((km, xK_braceright), fn '3')
+  , ((km, xK_parenleft), fn '1')
+  , ((km, xK_equal), fn '9')
+  , ((km, xK_asterisk), fn '0')
+  , ((km, xK_parenright), fn '2')
+  , ((km, xK_plus), fn '4')
   ]
 
 mapAlpha :: KeyMask -> (Char -> X ()) -> Map (KeyMask, KeySym) (X ())
