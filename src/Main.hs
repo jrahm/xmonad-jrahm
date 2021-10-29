@@ -25,7 +25,7 @@ main = do
   config <-
     applyKeys $ def
        { terminal    = "alacritty"
-       , modMask     = mod4Mask
+       , modMask     = mod3Mask
        , borderWidth = 2
        , keys = \config -> mempty
        , focusedBorderColor = "#ff6c00"
@@ -71,4 +71,4 @@ main = do
                        in icons ++ etc
                }
       toggleStructsKey
-      config { modMask = mod4Mask }
+      config { modMask = mod3Mask }

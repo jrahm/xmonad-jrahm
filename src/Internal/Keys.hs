@@ -30,6 +30,7 @@ import qualified Data.Map as Map
 import qualified XMonad.StackSet as W
 
 import Internal.Lib
+import Internal.DMenu
 
 type KeyMap l = XConfig l -> Map (KeyMask, KeySym) (X ())
 
@@ -70,13 +71,14 @@ newKeys markContext =
         , ((modm, xK_F11), (void $ spawn "spotify-control prev"))
         , ((modm, xK_semicolon), scratchpadSpawnActionTerminal "scratchpad")
         , ((modm, xK_F10), (void $ spawn "spotify-control play"))
-        , ((modm, xK_r),   (void $ spawn "dmenu_run"))
+        , ((modm, xK_r),   runDMenu)
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
         , ((modm .|. mod1Mask, xK_l), (void $ spawn "xsecurelock"))
         , ((modm .|. mod1Mask, xK_s), (void $ spawn "sudo systemctl suspend"))
         , ((modm .|. shiftMask, xK_c), kill)
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
-        , ((modm, xK_t),  (void $ spawn (terminal config)))
+        , ((mod4Mask, xK_Escape),  (void $ spawn (terminal config)))
+        , ((mod3Mask, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
         , ((modm, xK_w), runXPlus markContext config windowJump)
         , ((modm, xK_apostrophe), (submap $
