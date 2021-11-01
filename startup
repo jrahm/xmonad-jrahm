@@ -1,14 +1,5 @@
 #!/bin/bash
 
-
-common
-
-hostname_fn="hostname_$(hostname)"
-
-if [[ typeset -f "$hostname_fn" ]] ; then
-  "$hostname_fn" 
-fi
-
 common() {
   # Startup commands common to all the hosts.
   xsetroot -cursor_name left_ptr
@@ -17,7 +8,6 @@ common() {
 
 hostname_rahm1() {
   # Startup commands specific to my worktop.
-
   xinput set-prop "TPPS/2 Elan TrackPoint" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
   xinput set-prop "SYNA8004:00 06CB:CD8B Touchpad" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
 
@@ -33,3 +23,12 @@ hostname_photon() {
   xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
   feh --bg-scale "/home/rahm/.xmonad/wallpaper.jpg"
 }
+
+
+common
+
+hostname_fn="hostname_$(hostname)"
+
+if [[ "$(type -t "$hostname_fn")" == function ]] ; then
+  "$hostname_fn" 
+fi
