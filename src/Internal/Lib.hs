@@ -3,6 +3,7 @@ module Internal.Lib where
 
 import Prelude hiding ((!!))
 
+import XMonad.Util.Run
 import XMonad.Prompt
 import XMonad.Prompt.Input
 import XMonad.Prompt.Shell
@@ -19,6 +20,7 @@ import Text.Printf
 import XMonad hiding (workspaces, Screen)
 import XMonad.StackSet hiding (filter, focus)
 import qualified Data.Map as Map
+import Internal.DMenu
 
 type WorkspaceName = Char
 newtype Selector = Selector (forall a. (Eq a) => a -> [a] -> a)
@@ -123,15 +125,22 @@ windowJump = do
     windowTitlesToWinId <- withWindowSet $ \ss ->
       Map.fromList <$> mapM (\wid -> (,) <$> getString wid <*> return wid) (allWindows ss)
 
-    mkXPrompt
-      WinPrompt
-      xpConfig
-      (\input -> return $ filter (fuzzyCompletion input) (Map.keys windowTitlesToWinId)) $
-      \str -> do
+    windowId <- runDMenuPromptWithMap "Window" (Just "#f542f5") windowTitlesToWinId
+
+    case windowId of
+      Nothing -> return ()
+      Just wid -> do
         saveLastMark markContext
-        case Map.lookup str windowTitlesToWinId of
-          Just w -> focus w
-          Nothing ->
-            case filter (fuzzyCompletion str) (Map.keys windowTitlesToWinId) of
-              [s] -> mapM_ focus (Map.lookup s windowTitlesToWinId)
-              _ -> return ()
+        focus wid
+    -- mkXPrompt
+    --   WinPrompt
+    --   xpConfig
+    --   (\input -> return $ filter (fuzzyCompletion input) (Map.keys windowTitlesToWinId)) $
+    --   \str -> do
+    --     saveLastMark markContext
+    --     case Map.lookup str windowTitlesToWinId of
+    --       Just w -> focus w
+    --       Nothing ->
+    --         case filter (fuzzyCompletion str) (Map.keys windowTitlesToWinId) of
+    --           [s] -> mapM_ focus (Map.lookup s windowTitlesToWinId)
+    --           _ -> return ()

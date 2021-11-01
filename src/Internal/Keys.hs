@@ -4,6 +4,7 @@ module Internal.Keys where
 import Graphics.X11.ExtraTypes.XorgDefault
 import System.Process
 import XMonad.Util.Ungrab
+import XMonad.Layout.Spacing
 import Internal.XPlus
 import Data.Maybe (isJust)
 import Debug.Trace
@@ -65,6 +66,10 @@ click = do
   (_, _, window, _, _, _, _, _) <- io $ queryPointer dpy root
   focus window
 
+modifyWindowBorder :: Integer -> SpacingModifier
+modifyWindowBorder i = ModifyWindowBorder $ \(Border a b c d) ->
+  (Border (a + i) (b + i) (c + i) (d + i))
+
 newKeys :: MarkContext -> IO (KeyMap l)
 newKeys markContext =
     return $ \config@(XConfig {modMask = modm}) ->
@@ -102,8 +107,10 @@ newKeys markContext =
             mapNumbersAndAlpha 0 (
               runXPlus markContext config . swapWorkspace)))
 
-        , ((modm .|. shiftMask, xK_bracketleft), sendMessage (IncMasterN (-1)))
-        , ((modm .|. shiftMask, xK_bracketright), sendMessage (IncMasterN 1))
+        , ((modm, xK_minus), sendMessage (IncMasterN (-1)))
+        , ((modm, xK_plus), sendMessage (IncMasterN 1))
+        , ((modm .|. shiftMask, xK_bracketleft), sendMessage (modifyWindowBorder (-1)))
+        , ((modm .|. shiftMask, xK_bracketright), sendMessage (modifyWindowBorder 1))
         , ((modm, xK_bracketleft), sendMessage ShrinkZoom)
         , ((modm, xK_bracketright), sendMessage ExpandZoom)
 
