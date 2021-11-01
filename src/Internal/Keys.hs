@@ -1,6 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import Graphics.X11.ExtraTypes.XorgDefault
 import System.Process
 import XMonad.Util.Ungrab
 import Internal.XPlus

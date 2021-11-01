@@ -1,5 +1,5 @@
 Config
-   { font = "xft:Ubuntu Mono:size=14"
+   { font = "xft:Ubuntu Mono:size=20"
    , additionalFonts = ["xft:Lato:style=bold"]        -- default: []
    , borderColor = "#ffd9bf"
    , border = BottomB

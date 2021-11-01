@@ -1,24 +1,35 @@
 #!/bin/bash
 
-# Switch the displays around because the default state is for them to be reversed.
-xrandr --output DP-2 --left-of DVI-I-1 --mode 2560x1440
 
-# Change the background image using 'feh'
-feh --bg-scale "$HOME/.xmonad/wallpaper.jpg"
+common
 
-# Increase the kebyoard repeat rate and decrease the repeat time.
-xset r rate 200 60
+hostname_fn="hostname_$(hostname)"
 
-# Run the screensaver so I can lock it.
-nohup xscreensaver -no-splash & > /dev/null
-
-# Run a compositer to make things a little prettier.
-
-if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
-  killall compton
+if [[ typeset -f "$hostname_fn" ]] ; then
+  "$hostname_fn" 
 fi
 
-nohup compton --backend glx & > /dev/null
+common() {
+  # Startup commands common to all the hosts.
+  xsetroot -cursor_name left_ptr
+  xset r rate 200 60
+}
 
-# Set the cursor to not be a big X
-xsetroot -cursor_name left_ptr
+hostname_rahm1() {
+  # Startup commands specific to my worktop.
+
+  xinput set-prop "TPPS/2 Elan TrackPoint" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
+  xinput set-prop "SYNA8004:00 06CB:CD8B Touchpad" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
+
+  feh --bg-scale "/home/rahm/.xmonad/assets/Death-Valley-desert-USA_3840x2160.jpg"
+}
+
+hostname_photon() {
+  # Startup commands specific to my desktop.
+
+  if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
+    nohup compton --backend glx & > /dev/null
+  fi
+  xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
+  feh --bg-scale "/home/rahm/.xmonad/wallpaper.jpg"
+}
