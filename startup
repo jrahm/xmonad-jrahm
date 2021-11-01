@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Switch the displays around because the default state is for them to be reversed.
-xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
+xrandr --output DP-2 --left-of DVI-I-1 --mode 2560x1440
 
 # Change the background image using 'feh'
 feh --bg-scale "$HOME/.xmonad/wallpaper.jpg"
@@ -18,7 +18,7 @@ if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
   killall compton
 fi
 
-nohup compton --backend glx --paint-on-overlay & > /dev/null
+nohup compton --backend glx & > /dev/null
 
 # Set the cursor to not be a big X
 xsetroot -cursor_name left_ptr

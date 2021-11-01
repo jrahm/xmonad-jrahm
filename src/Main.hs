@@ -71,4 +71,4 @@ main = do
                        in icons ++ etc
                }
       toggleStructsKey
-      config { modMask = mod3Mask }
+      config

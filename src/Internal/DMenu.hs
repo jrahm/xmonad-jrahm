@@ -5,6 +5,6 @@ import XMonad.Util.Run
 import Control.Monad
 
 runDMenu :: X ()
-runDMenu = void $ do
+runDMenu = void $
   safeSpawn "/usr/bin/dmenu_run" [
     "-p", "Execute ", "-l", "12", "-dim", "0.4"]
