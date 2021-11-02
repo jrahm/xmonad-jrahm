@@ -11,14 +11,18 @@ hostname_rahm1() {
   xinput set-prop "TPPS/2 Elan TrackPoint" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
   xinput set-prop "SYNA8004:00 06CB:CD8B Touchpad" "Coordinate Transformation Matrix" 3 0 0 0 3 0 0 0 1
 
-  feh --bg-scale "/home/rahm/.xmonad/assets/Death-Valley-desert-USA_3840x2160.jpg"
+  if [ -z "$(ps aux | grep compton | grep -v grep)" ] ; then
+    __GL_SYNC_TO_VBLANK=1 nohup compton --backend=glx &>/dev/null &
+  fi
+
+  feh --bg-scale "$HOME/wp.jpg"
 }
 
 hostname_photon() {
   # Startup commands specific to my desktop.
 
-  if [ ! -z "$(ps aux | grep compton | grep -v grep)" ] ; then
-    nohup compton --backend xrender & > /dev/null
+  if [ -z "$(ps aux | grep compton | grep -v grep)" ] ; then
+    __GL_SYNC_TO_VBLANK=1 nohup compton --backend=glx &>/dev/null &
   fi
   xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
   feh --bg-scale "/home/rahm/.xmonad/wallpaper.jpg"

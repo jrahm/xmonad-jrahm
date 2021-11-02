@@ -54,13 +54,13 @@ drawPng l = do
            -- (0.9, 0.9, 1.0),
            -- (0.8, 0.8, 1.0),
            -- (0.7, 0.7, 1.0),
-           (0.6, 0.6, 0.8),
-           (0.5, 0.5, 0.8),
-           (0.4, 0.4, 0.8),
-           (0.3, 0.3, 0.8),
-           (0.2, 0.2, 0.8),
-           (0.1, 0.1, 0.8),
-           (0.0, 0.0, 0.8)
+           (0.8, 0.6, 0.6),
+           (0.8, 0.5, 0.5),
+           (0.8, 0.4, 0.4),
+           (0.8, 0.3, 0.3),
+           (0.8, 0.2, 0.2),
+           (0.8, 0.1, 0.1),
+           (0.8, 0.0, 0.0)
           ]
 
     exists <- liftIO $ doesFileExist filepathXpm
@@ -71,7 +71,7 @@ drawPng l = do
               setLineCap LineCapButt
               setLineJoin LineJoinMiter
 
-              forM_ (reverse $ zip (map (second padR) rects) colors) $
+              forM_ (reverse $ zip (map (second extraPad) rects) colors) $
                 \((wind, Rectangle x y w h), (r, g, b)) -> do
                   setSourceRGBA r g b 1
 
@@ -93,7 +93,8 @@ drawPng l = do
 
     return filepathXpm
     where
-      padR = id
+      extraPad (Rectangle x y w h) =
+        Rectangle (x + 100) (y + 100) (w - 100) (h - 100)
       -- padR (Rectangle x y w h) =
       --   Rectangle x y (max 1 $ w - 120) (max 1 $ h - 120)
 

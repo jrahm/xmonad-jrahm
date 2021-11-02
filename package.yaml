@@ -19,3 +19,4 @@ dependencies:
   - cryptohash
   - listsafe
   - X11
+  - split

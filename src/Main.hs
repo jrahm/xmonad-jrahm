@@ -10,6 +10,7 @@ import Internal.Layout
 import XMonad.Hooks.ManageHelpers
 import XMonad.Layout.IndependentScreens
 import Text.Printf
+import Data.List.Split
 import XMonad.Hooks.EwmhDesktops
 
 import Internal.Keys
@@ -29,7 +30,8 @@ main = do
        , borderWidth = 2
        , keys = \config -> mempty
        , focusedBorderColor = "#ff6c00"
-       , normalBorderColor = "#ffd9bf"
+       -- , normalBorderColor = "#ffd9bf"
+       , normalBorderColor = "#000000"
        , layoutHook = myLayout
        , startupHook = do
           ewmhDesktopsStartup
@@ -55,15 +57,17 @@ main = do
     statusBar
       "xmobar"
       xmobarPP {
-                 ppCurrent = xmobarColor "#ffffff" "red" . printf "%s"
-               , ppVisible = xmobarColor "#8888ff" "" . printf "%s"
-               , ppHidden  = xmobarColor "#888888" "" . printf "%s"
-               , ppWsSep = "<fn=1><fc=#808080> · </fc></fn>"
+                 ppCurrent = xmobarColor "#ff8888" "red" . printf "<fn=1>%s</fn>"
+               , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=0>%s</fn>"
+               , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
+               , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
                , ppTitle =
-                   xmobarColor "#8888ff" "" . printf "%s" .
-                      (printf "<fn=1>%s</fn>" :: String -> String)
+                   xmobarColor "#808080" "" .
+                      printf "<fn=3><fc=#bbbbbb>%s</fc></fn>" .
+                        parseOut .
+                          trunc 50
 
-               , ppSep = xmobarColor "#404040" "" "   ────   "
+               , ppSep = xmobarColor "#404040" "" " │ "
                , ppLayout = const ""
                , ppExtras = [showLayout]
                , ppOrder =  \ss ->
@@ -72,3 +76,21 @@ main = do
                }
       toggleStructsKey
       config
+
+  where
+    parseOut :: String -> String
+    parseOut str =
+      let colors = ["#ff878f", "#e187ff", "#8f87ff", "#87fff7", "#8bff87", "#ffe987", "#ff8787"]
+          components = zip (cycle colors) (splitOnAll [" - ", " · ", " "] str)
+          in  concatMap (\(color, str) ->
+                  printf "<fc=%s>%s</fc> " color str) components
+
+    trunc amt str =
+      if length str > amt - 4
+        then take (amt - 4) str ++ " ..."
+        else str
+
+    splitOnAll arr str = splitOnAll' arr [str]
+    splitOnAll' [] str = str
+    splitOnAll' (a:as) str = splitOnAll' as (concatMap (splitOn a) str)
+
