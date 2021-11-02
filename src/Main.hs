@@ -92,5 +92,6 @@ main = do
 
     splitOnAll arr str = splitOnAll' arr [str]
     splitOnAll' [] str = str
-    splitOnAll' (a:as) str = splitOnAll' as (concatMap (splitOn a) str)
+    splitOnAll' (a:as) [str] = splitOnAll' as (splitOn a str)
+    splitOnAll' _ lst = lst
 
