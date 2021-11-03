@@ -4,20 +4,20 @@ module Internal.LayoutDraw where
 
 import System.IO
 
+import Control.Monad.Writer
+import XMonad.Layout.Spacing
 import System.Process
 import Text.Printf
 import Control.Arrow
 import Control.Exception
 import Control.Monad
-import Graphics.Rendering.Cairo
-import Graphics.Rendering.Cairo.Internal (Render(runRender))
-import Graphics.Rendering.Cairo.Types (Cairo(Cairo))
 import Control.Concurrent (threadDelay)
 
 import System.FilePath
 import XMonad
 import XMonad.StackSet as S
 import Data.Maybe
+import Data.Foldable
 import System.Directory
 
 import Internal.Layout
@@ -27,93 +27,104 @@ showLayout :: X (Bool, String, Maybe String)
 showLayout = do
     winset <- gets windowset
     let layout = S.layout . S.workspace . S.current $ winset
-    (cached, xpm) <- drawPng layout
+
+    layout' <- handleMessage layout (
+       SomeMessage $ ModifyWindowBorder (
+          const (Border 0 0 0 0)))
+
+    let layout'' = layout'
+
+    (cached, xpm) <-
+        case layout'' of
+          Just l -> drawXpmIO l
+          Nothing -> drawXpmIO layout
     return $ (cached, description layout, Just $ printf "<icon=%s/>" xpm)
 
-iconSize :: (Num a) => (a, a)
-iconSize = (64, 32)
+pointInRect :: (Dimension, Dimension) -> Rectangle -> Bool
+pointInRect (x, y) (Rectangle x' y' w h) =
+  x <= (fi x' + fi w) && x >= fi x' && y <= (fi y' + fi h) && y >= fi y'
+  where
+    fi :: (Integral a, Num b) => a -> b
+    fi = fromIntegral
 
-drawPng :: (LayoutClass layout Window) => layout Window -> X (Bool, String)
-drawPng l = do
-    dir <- getXMonadDir
-    let sixWindows = [1..(4 :: Window)]
-    let stack = differentiate sixWindows
-    (rects, _) <-
-          runLayout
-            (Workspace "0" l stack)
-            (Rectangle 0 0 (fst iconSize * 30) (snd iconSize * 30))
-    return ()
+sf :: (Integral a) => a
+sf = 1024
 
-    let descr = description l
-    let pngCacheDir = dir </> "icons" </> "cache"
+drawXpmIO :: (LayoutClass layout Window) => layout Window -> X (Bool, String)
+drawXpmIO l = do
+  dir <- getXMonadDir
 
-    liftIO $ do
-      createDirectoryIfMissing True pngCacheDir
-      let testf = dir </> "text.txt"
-      let filepathPng = pngCacheDir </> (quickHash descr ++ ".png")
-      let filepathXpm = pngCacheDir </> (quickHash descr ++ ".xpm")
+  let shrinkAmt = 4
 
-      let colors = [
-             -- (1.0, 1.0, 1.0),
-             -- (0.9, 0.9, 1.0),
-             -- (0.8, 0.8, 1.0),
-             -- (0.7, 0.7, 1.0),
-             (0.8, 0.6, 0.6),
-             (0.8, 0.5, 0.5),
-             (0.8, 0.4, 0.4),
-             (0.8, 0.3, 0.3),
-             (0.8, 0.2, 0.2),
-             (0.8, 0.1, 0.1),
-             (0.8, 0.0, 0.0)
-            ]
+  let (w, h) = (56 + shrinkAmt, 28 + shrinkAmt)
+  let descr = description l
+  let iconCacheDir = dir </> "icons" </> "cache"
+  let iconPath = iconCacheDir </> (quickHash descr ++ ".xpm")
 
-      exists <- doesFileExist filepathXpm
-      when (not exists) $ do
-          withImageSurface FormatARGB32 64 32 $ \surface -> do
-              renderWith surface $ do
-                setLineCap LineCapButt
-                setLineJoin LineJoinMiter
+  let colors = [
+        "#cc9a9a",
+        "#cc9999",
+        "#cc8080",
+        "#cc6666",
+        "#cc4c4c",
+        "#cc3232",
+        "#cc1818"
+        ]
 
-                forM_ (reverse $ zip (map (second extraPad) rects) colors) $
-                  \((wind, Rectangle x y w h), (r, g, b)) -> do
-                    setSourceRGBA r g b 1
+  (rects', _) <-
+    runLayout
+      (Workspace "0" l (differentiate [1 .. 6]))
+      (Rectangle 0 0 (w * sf) (h * sf))
 
-                    rectangle
-                      (fromIntegral $ floor (fromIntegral x / 30.0))
-                      (fromIntegral $ floor (fromIntegral y / 30.0))
-                      (fromIntegral $ floor (fromIntegral w / 30.0))
-                      (fromIntegral $ floor (fromIntegral h / 30.0))
+  let rects = flip map rects' $ \(_, (Rectangle x y w h)) ->
+                Rectangle (x `div` sf) (y `div` sf) (w `div` sf) (h `div` sf)
 
-                    fill
+  liftIO $ do
+    exists <- doesFileExist iconPath
+    createDirectoryIfMissing True iconCacheDir
 
-              surfaceWriteToPNG surface filepathPng
+    when (not exists) $ do
+      let xpmText = drawXpm (w, h) (zip (cycle colors) rects) 4
+      writeFile iconPath xpmText
 
-              _ <- handle (\(e :: SomeException) -> return ()) $ void $ readProcessWithExitCode
-                     "/usr/bin/convert"
-                     [filepathPng, filepathXpm]
-                     ""
-              return ()
+    return (exists, iconPath)
 
-      return (exists, filepathXpm)
-    where
-      extraPad (Rectangle x y w h) =
-        Rectangle (x + 100) (y + 100) (w - 100) (h - 100)
-      -- padR (Rectangle x y w h) =
-      --   Rectangle x y (max 1 $ w - 120) (max 1 $ h - 120)
+drawXpm :: (Dimension, Dimension) -> [(String, Rectangle)] -> Dimension -> String
+drawXpm (w, h) rects' shrinkAmt = execWriter $ do
+    tell "/* XPM */\n"
+    tell "static char *out[] = {\n"
+    forM_ rects' $ \(_, rect) -> do
+      tell $ "/* " ++ show rect ++ " */\n"
+    tell $ "/* --------------------------- */\n"
+    forM_ rects $ \(_, rect) -> do
+      tell $ "/* " ++ show rect ++ " */\n"
+      
+    tell $ printf "\"%d %d %d 1 \",\n" (w - shrinkAmt) (h - shrinkAmt) (length rects + 1)
 
-newtype InterceptLayout l a =
-    InterceptLayout {
-       unIntercept :: (l a)
-    } deriving (Show, Read)
+    let zipRects = (zip ['A' .. 'Z'] rects)
 
-instance (LayoutClass l Window) => LayoutClass (InterceptLayout l) Window where
-    runLayout (Workspace t l s) rect = do
-      (rects, mr) <- runLayout (Workspace t (unIntercept l) s) rect
-      return (rects, fmap InterceptLayout mr)
+    forM_ zipRects $ \(char, (color, _)) -> do
+      tell $ printf "\"%c c %s\",\n" char color
+    tell "\"% c None\"a,\n"
 
-    handleMessage this mesg = do
-      ret <- handleMessage (unIntercept this) mesg
-      -- mapM_ drawThing ret
-      return (InterceptLayout <$> ret)
+    forM_ [0 .. h - 1 - shrinkAmt] $ \y -> do
+      tell "\""
+      forM_ [0 .. w - 1 - shrinkAmt] $ \x -> 
+        (case find (matches x y) zipRects of
+          Nothing -> tell "%"
+          Just (chr, _) -> tell [chr])
+      tell "\""
+      when (y /= h - 1 - shrinkAmt) (tell ",")
+      tell "\n"
+    tell "};"
 
-    description = ("Intercepted "++) . description . unIntercept
+  where
+    matches x y (_, (_, r)) = pointInRect (x, y) r
+    rects = map (second (shrink shrinkAmt)) rects'
+    guard a b = if a <= shrinkAmt then 1 else b
+    shrink amt (Rectangle x y w h) =
+      Rectangle
+        x
+        y
+        (guard w $ w - fromIntegral amt)
+        (guard h $ h - fromIntegral amt)

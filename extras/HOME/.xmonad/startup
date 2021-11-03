@@ -4,6 +4,10 @@ common() {
   # Startup commands common to all the hosts.
   xsetroot -cursor_name left_ptr
   xset r rate 200 60
+
+  xrdb "$HOME/.Xresources"
+
+  rm -rf "$HOME/.xmonad/icons/cache/"
 }
 
 hostname_rahm1() {
@@ -31,7 +35,6 @@ hostname_photon() {
 
 common
 
-xrdb "$HOME/.Xresources"
 hostname_fn="hostname_$(cat /etc/hostname)"
 
 if [[ "$(type -t "$hostname_fn")" == function ]] ; then

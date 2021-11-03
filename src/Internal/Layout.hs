@@ -13,6 +13,7 @@ import XMonad.Layout.ThreeColumns
 import XMonad.Layout.Grid
 import XMonad.Layout.Dishes
 import XMonad.Layout.MosaicAlt
+import qualified XMonad.Layout.Dwindle as D
 import XMonad.Layout
 import XMonad.Layout.LayoutModifier
 import XMonad
@@ -27,12 +28,56 @@ myLayout =
       ModifiedLayout (HFlippable False) $
         spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts $
           spiral (6/7) |||
-          Tall 1 (3/100) (1/2) |||
-          ThreeCol 1 (3/100) (1/2) |||
+          ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
+          ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
           Full |||
           Grid |||
           Dishes 2 (1/6) |||
-          (MosaicAlt M.empty :: MosaicAlt Window)
+          (MosaicAlt M.empty :: MosaicAlt Window) |||
+          (D.Dwindle D.R D.CW 1.5 1.1)
+
+data ModifyDescription m l a = ModifyDescription m (l a)
+  deriving (Show, Read)
+
+data TallDescriptionModifier = TallDescriptionModifier
+  deriving (Show, Read)
+
+data ThreeColDescMod = ThreeColDescMod
+  deriving (Show, Read)
+
+class DescriptionModifier m l where
+  newDescription :: m -> l a -> String -> String
+
+instance (Show m, DescriptionModifier m l, LayoutClass l a) => LayoutClass (ModifyDescription m l) a where
+  runLayout (W.Workspace t (ModifyDescription m l) a) rect = do
+    (rects, maybeNewLayout) <- runLayout (W.Workspace t l a) rect
+    return (rects, fmap (ModifyDescription m) maybeNewLayout)
+
+  doLayout (ModifyDescription m l) a s = do
+    (rects, maybeNewLayout) <- doLayout l a s
+    return (rects, fmap (ModifyDescription m) maybeNewLayout)
+
+  pureLayout (ModifyDescription m l) a s = pureLayout l a s
+
+  emptyLayout (ModifyDescription m l) a = do
+    (rects, maybeNewLayout) <- emptyLayout l a
+    return (rects, fmap (ModifyDescription m) maybeNewLayout)
+
+  handleMessage (ModifyDescription m l) a = do
+    maybeNewLayout <- handleMessage l a
+    return (ModifyDescription m <$> maybeNewLayout)
+
+  pureMessage (ModifyDescription m l) a =
+    let maybeNewLayout = pureMessage l a in
+      ModifyDescription m <$> maybeNewLayout
+
+  description (ModifyDescription m l) = newDescription m l (description l)
+
+instance DescriptionModifier TallDescriptionModifier Tall where
+  newDescription _ (Tall mast _ _) _ = "Tall(" ++ show mast ++ ")"
+
+instance DescriptionModifier ThreeColDescMod ThreeCol where
+  newDescription _ (ThreeCol mast _ _) _ = "ThreeCol(" ++ show mast ++ ")"
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
 

@@ -71,7 +71,3 @@ packages:
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
-
-extra-deps:
-  - gtk2hs-buildtools-0.13.8.1@sha256:78e0dc8e3ae2d3ebe01d8d65e5f3f463102ea13a66be6bb1bff7a20a3d93486d,5238
-  - cairo-0.13.8.1@sha256:1938aaeb5d3504678d995774dfe870f6b66cbd43d336b692fa8779b23b2b67a9,4075

@@ -14,9 +14,9 @@ dependencies:
   - filepath
   - process
   - containers
-  - cairo
   - bytestring
   - cryptohash
   - listsafe
   - X11
   - split
+  - mtl
