@@ -15,4 +15,4 @@ bluetoothctl -- info | while read line ; do
   fi
 done
 
-exec echo "<fc=#a0a0a0></fc> <fc=#404040>│</fc>"
+exec echo "<fc=#a0a0a0></fc> <fc=#404040>│</fc> "

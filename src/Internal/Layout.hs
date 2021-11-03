@@ -10,6 +10,7 @@ import Data.List
 import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.Grid
+import XMonad.Layout.Dishes
 import XMonad.Layout
 import XMonad.Layout.LayoutModifier
 import XMonad
@@ -24,7 +25,8 @@ myLayout =
       Tall 1 (3/100) (1/2) |||
       ThreeCol 1 (3/100) (1/2) |||
       Full |||
-      Grid
+      Grid |||
+      Dishes 2 (1/6)
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
 

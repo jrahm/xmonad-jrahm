@@ -251,6 +251,6 @@ int main(int argc, char** argv)
   return 0;
 
 fail:
-  printf("");
+  printf("<fc=#404040>%s</fc> ", icons[11]);
   return 0;
 }

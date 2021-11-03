@@ -24,14 +24,15 @@ hostname_photon() {
   if [ -z "$(ps aux | grep compton | grep -v grep)" ] ; then
     __GL_SYNC_TO_VBLANK=1 nohup compton --backend=glx &>/dev/null &
   fi
-  xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
-  feh --bg-scale "/home/rahm/.xmonad/wallpaper.jpg"
+  # xrandr --output DVI-I-1 --right-of DP-5 --mode 2560x1440
+  feh --bg-scale "/usr/share/backgrounds/archlinux/mountain.jpg"
 }
 
 
 common
 
-hostname_fn="hostname_$(hostname)"
+xrdb "$HOME/.Xresources"
+hostname_fn="hostname_$(cat /etc/hostname)"
 
 if [[ "$(type -t "$hostname_fn")" == function ]] ; then
   "$hostname_fn" 

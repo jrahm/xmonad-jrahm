@@ -30,21 +30,29 @@ Config
       " %logo%  <fc=#a0a0a0><fn=3>%uname%</fn></fc><fc=#404040> │\
       \</fc><fc=#a0a0a0> %date%</fc><fc=#404040> │ \
       \</fc>%StdinReader%}<fn=1><fc=#8888ff>%time%</fc></fn>\
-      \{ %cpu% <fc=#404040>\
+      \{ %cpu% %memory% <fc=#404040>\
       \│</fc> %KLMO% <fc=#404040>│\
       \</fc> <fc=#a0a0a0>%mpris2%</fc> <fc=#404040>│ \
       \</fc>%bluetooth%%bat% "
    , commands = [
        Run StdinReader,
-       Run Memory ["-t", "<usedbar>"] 10,
        Run Date "%H:%M:%S" "time" 10,
        Run Date "<fn=3>%m/%d</fn>" "date" 10,
        Run Cpu [
-         "-t", "<fn=3><fc=#000000><bar></fc></fn>",
+           "-t", "<fn=3><fc=#000000><bar></fc></fn>",
+           "-L", "3",
+         "-H", "50",
+         "-b", "-",
+         "-f", "-",
+         "--normal", "green",
+         "--high", "red"
+       ] 10,
+       Run Memory [
+         "-t", "<fn=3><fc=#000000><usedbar></fc></fn>",
          "-L", "3",
          "-H", "50",
-         "-b", "─",
-         "-f", "─",
+         "-b", "-",
+         "-f", "-",
          "--normal", "green",
          "--high", "red"
        ] 10,
@@ -62,7 +70,9 @@ Config
              , ("considerable cloudiness", "<fc=#a0a0a0>ﭽ")]
              ["--template", "<skyConditionS></fc><fn=3><fc=#a0a0a0>   \
              \<tempF>°F</fc></fn>"] 360000,
-       Run Mpris2 "spotify" ["-t", "<fc=#1aa54b></fc>  <fn=3><title></fn>"] 20,
+       Run Mpris2 "spotify" [
+           "-t", "<fc=#1aa54b></fc>  <fn=3><title></fn>",
+           "--nastring", "<fc=#404040> </fc>"] 20,
        Run Com ".xmonad/xmobar-logo" [] "logo" 0,
        Run Com "uname" ["-r"] "uname" 0,
        Run Com ".xmonad/xmobar-bluetooth" [] "bluetooth" 50,

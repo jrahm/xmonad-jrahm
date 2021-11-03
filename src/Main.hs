@@ -81,7 +81,7 @@ main = do
     parseOut :: String -> String
     parseOut str =
       let colors = ["#ff878f", "#e187ff", "#8f87ff", "#87fff7", "#8bff87", "#ffe987", "#ff8787"]
-          components = zip (cycle colors) (splitOnAll [" - ", " · ", " "] str)
+          components = zip (cycle colors) (splitOnAll [" - ", " | ", " · ", " "] str)
           in  concatMap (\(color, str) ->
                   printf "<fc=%s>%s</fc> " color str) components
 

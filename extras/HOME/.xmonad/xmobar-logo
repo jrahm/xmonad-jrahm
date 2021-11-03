@@ -1,7 +1,7 @@
 #!/bin/bash
 
 case "$(uname -a)" in
-  *-arch-*) exec echo '<fn=5><fc=#1785bd></fc></fn>' ;;
+  *-arch*) exec echo '<fn=5><fc=#1785bd></fc></fn>' ;;
   *Debian*) exec echo '<fn=5><fc=#c00649></fc></fn>' ;;
   *Ubuntu*) exec echo '<fn=5><fc=#ff8888></fc></fn>' ;;
   *Linux*)  exec echo '<fn=5><fc=#ffffff></fc></fn>' ;;
