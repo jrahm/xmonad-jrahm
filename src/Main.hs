@@ -41,7 +41,7 @@ main = do
        , focusedBorderColor = "#ff6c00"
        -- , normalBorderColor = "#ffd9bf"
        , normalBorderColor = "#000000"
-       , layoutHook = myLayout
+       , layoutHook = avoidStruts myLayout
        , startupHook = do
           ewmhDesktopsStartup
           spawn fp

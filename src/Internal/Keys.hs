@@ -1,6 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import XMonad.Hooks.ManageDocks
 import XMonad.Layout.MosaicAlt
 import Graphics.X11.ExtraTypes.XorgDefault
 import System.Process
@@ -159,6 +160,7 @@ newKeys markContext =
         , ((modm .|. mod1Mask, xK_a), runXPlus markContext config (withScreen W.greedyView 0))
         , ((modm .|. mod1Mask, xK_o), runXPlus markContext config (withScreen W.greedyView 1))
         , ((modm .|. mod1Mask, xK_e), runXPlus markContext config (withScreen W.greedyView 2))
+        , ((modm,              xK_b), sendMessage ToggleStruts)
 
         -- Buttons programmed on my mouse.
         , ((shiftMask, xK_F1), click >> (withFocused $ windows . W.sink))

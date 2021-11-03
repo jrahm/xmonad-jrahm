@@ -26,7 +26,7 @@ myLayout =
   ModifiedLayout (Zoomable False 0.05 0.05) $
     ModifiedLayout (Flippable False) $
       ModifiedLayout (HFlippable False) $
-        spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts $
+        spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
           spiral (6/7) |||
           ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
           ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
