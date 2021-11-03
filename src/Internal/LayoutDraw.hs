@@ -2,6 +2,8 @@
 ScopedTypeVariables, BangPatterns #-}
 module Internal.LayoutDraw where
 
+import System.IO
+
 import System.Process
 import Text.Printf
 import Control.Arrow
@@ -21,17 +23,17 @@ import System.Directory
 import Internal.Layout
 import Internal.Hash
 
-showLayout :: X (Maybe String)
+showLayout :: X (Bool, String, Maybe String)
 showLayout = do
     winset <- gets windowset
     let layout = S.layout . S.workspace . S.current $ winset
-    xpm <- drawPng layout
-    return $ Just $ printf "<icon=%s/>" xpm
+    (cached, xpm) <- drawPng layout
+    return $ (cached, description layout, Just $ printf "<icon=%s/>" xpm)
 
 iconSize :: (Num a) => (a, a)
 iconSize = (64, 32)
 
-drawPng :: (LayoutClass layout Window) => layout Window -> X String
+drawPng :: (LayoutClass layout Window) => layout Window -> X (Bool, String)
 drawPng l = do
     dir <- getXMonadDir
     let sixWindows = [1..(4 :: Window)]
@@ -45,54 +47,54 @@ drawPng l = do
     let descr = description l
     let pngCacheDir = dir </> "icons" </> "cache"
 
-    liftIO $ createDirectoryIfMissing True pngCacheDir
-    let testf = dir </> "text.txt"
-    let filepathPng = pngCacheDir </> (quickHash descr ++ ".png")
-    let filepathXpm = pngCacheDir </> (quickHash descr ++ ".xpm")
+    liftIO $ do
+      createDirectoryIfMissing True pngCacheDir
+      let testf = dir </> "text.txt"
+      let filepathPng = pngCacheDir </> (quickHash descr ++ ".png")
+      let filepathXpm = pngCacheDir </> (quickHash descr ++ ".xpm")
 
-    let colors = [
-           -- (1.0, 1.0, 1.0),
-           -- (0.9, 0.9, 1.0),
-           -- (0.8, 0.8, 1.0),
-           -- (0.7, 0.7, 1.0),
-           (0.8, 0.6, 0.6),
-           (0.8, 0.5, 0.5),
-           (0.8, 0.4, 0.4),
-           (0.8, 0.3, 0.3),
-           (0.8, 0.2, 0.2),
-           (0.8, 0.1, 0.1),
-           (0.8, 0.0, 0.0)
-          ]
+      let colors = [
+             -- (1.0, 1.0, 1.0),
+             -- (0.9, 0.9, 1.0),
+             -- (0.8, 0.8, 1.0),
+             -- (0.7, 0.7, 1.0),
+             (0.8, 0.6, 0.6),
+             (0.8, 0.5, 0.5),
+             (0.8, 0.4, 0.4),
+             (0.8, 0.3, 0.3),
+             (0.8, 0.2, 0.2),
+             (0.8, 0.1, 0.1),
+             (0.8, 0.0, 0.0)
+            ]
 
-    exists <- liftIO $ doesFileExist filepathXpm
-    when (not exists) $
-      liftIO $ do
-        withImageSurface FormatARGB32 64 32 $ \surface -> do
-            renderWith surface $ do
-              setLineCap LineCapButt
-              setLineJoin LineJoinMiter
+      exists <- doesFileExist filepathXpm
+      when (not exists) $ do
+          withImageSurface FormatARGB32 64 32 $ \surface -> do
+              renderWith surface $ do
+                setLineCap LineCapButt
+                setLineJoin LineJoinMiter
 
-              forM_ (reverse $ zip (map (second extraPad) rects) colors) $
-                \((wind, Rectangle x y w h), (r, g, b)) -> do
-                  setSourceRGBA r g b 1
+                forM_ (reverse $ zip (map (second extraPad) rects) colors) $
+                  \((wind, Rectangle x y w h), (r, g, b)) -> do
+                    setSourceRGBA r g b 1
 
-                  rectangle
-                    (fromIntegral $ floor (fromIntegral x / 30.0))
-                    (fromIntegral $ floor (fromIntegral y / 30.0))
-                    (fromIntegral $ floor (fromIntegral w / 30.0))
-                    (fromIntegral $ floor (fromIntegral h / 30.0))
+                    rectangle
+                      (fromIntegral $ floor (fromIntegral x / 30.0))
+                      (fromIntegral $ floor (fromIntegral y / 30.0))
+                      (fromIntegral $ floor (fromIntegral w / 30.0))
+                      (fromIntegral $ floor (fromIntegral h / 30.0))
 
-                  fill
+                    fill
 
-            surfaceWriteToPNG surface filepathPng
+              surfaceWriteToPNG surface filepathPng
 
-            out <- readProcessWithExitCode
-              "/usr/bin/convert"
-              [filepathPng, filepathXpm]
-              ""
-            return ()
+              _ <- handle (\(e :: SomeException) -> return ()) $ void $ readProcessWithExitCode
+                     "/usr/bin/convert"
+                     [filepathPng, filepathXpm]
+                     ""
+              return ()
 
-    return filepathXpm
+      return (exists, filepathXpm)
     where
       extraPad (Rectangle x y w h) =
         Rectangle (x + 100) (y + 100) (w - 100) (h - 100)

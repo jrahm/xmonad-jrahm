@@ -1,5 +1,7 @@
 import XMonad
+import Control.Exception
 import XMonad.Hooks.DynamicLog
+import Control.Concurrent
 import XMonad.Layout.Spacing
 import XMonad.Actions.WindowNavigation
 import XMonad.Util.CustomKeys
@@ -12,10 +14,15 @@ import XMonad.Layout.IndependentScreens
 import Text.Printf
 import Data.List.Split
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.ManageDocks
+import XMonad.Util.Run (spawnPipe)
+import Control.Monad (when)
+import System.IO
 
 import Internal.Keys
 import Internal.LayoutDraw
 import Data.List (partition, isPrefixOf)
+import Data.Maybe
 
 
 main = do
@@ -23,8 +30,10 @@ main = do
   homeDir <- getHomeDirectory
   let fp = homeDir </> ".xmonad" </> "startup"
 
+  xmproc <- spawnPipe "xmobar"
+
   config <-
-    applyKeys $ def
+    applyKeys $ docks $ def
        { terminal    = "alacritty"
        , modMask     = mod3Mask
        , borderWidth = 2
@@ -49,33 +58,33 @@ main = do
        , handleEventHook = fullscreenEventHook
        , focusFollowsMouse = False
        , clickJustFocuses = False
+       , logHook = do
+           (_, _, layout) <- showLayout
+
+           dynamicLogWithPP $ xmobarPP {
+               ppCurrent = xmobarColor "#ff8888" "red" . printf "<fn=1>%s</fn>"
+             , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=6>%s</fn>"
+             , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
+             , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
+             , ppTitle =
+                 xmobarColor "#808080" "" .
+                    printf "<fn=3><fc=#bbbbbb>%s</fc></fn>" .
+                      parseOut .
+                        trunc 50
+
+             , ppSep = xmobarColor "#404040" "" " │ "
+             , ppLayout = const (fromMaybe "" layout)
+             , ppExtras = []
+             , ppOutput = hPutStrLn xmproc
+             , ppOrder =  \ss ->
+                 let (icons, etc) = partition ("<icon"`isPrefixOf`) ss
+                     in icons ++ etc
+             }
        }
 
-  let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
+  -- let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
 
-  xmonad =<<
-    statusBar
-      "xmobar"
-      xmobarPP {
-                 ppCurrent = xmobarColor "#ff8888" "red" . printf "<fn=1>%s</fn>"
-               , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=6>%s</fn>"
-               , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
-               , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
-               , ppTitle =
-                   xmobarColor "#808080" "" .
-                      printf "<fn=3><fc=#bbbbbb>%s</fc></fn>" .
-                        parseOut .
-                          trunc 50
-
-               , ppSep = xmobarColor "#404040" "" " │ "
-               , ppLayout = const ""
-               , ppExtras = [showLayout]
-               , ppOrder =  \ss ->
-                   let (icons, etc) = partition ("<icon"`isPrefixOf`) ss
-                       in icons ++ etc
-               }
-      toggleStructsKey
-      config
+  xmonad config
 
   where
     parseOut :: String -> String
