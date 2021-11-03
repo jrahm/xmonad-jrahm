@@ -97,7 +97,7 @@ main = do
             else
               case amt of
                 0 -> trunc' False 0 as acc
-                4 -> trunc' False 0 as ("... " ++ acc)
+                4 | length as > 3 -> trunc' False 0 as ("... " ++ acc)
                 _ -> trunc' False (amt - 1) as (a : acc)
 
     splitOnAll arr str = splitOnAll' arr [str]
