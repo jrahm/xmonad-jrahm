@@ -42,8 +42,7 @@ applyKeys config@(XConfig {modMask = modm}) =
   withNewMarkContext $ \markContext -> do
     ks <- newKeys markContext
     ms <- newMouse markContext
-    withWindowNavigation (xK_k, xK_h, xK_j, xK_l) $
-      config { keys = ks, mouseBindings = ms }
+    return $ config { keys = ks, mouseBindings = ms }
 
 newMouse :: MarkContext -> IO (XConfig l -> Map (KeyMask, Button) (Window -> X ()))
 newMouse markContext =
@@ -74,27 +73,40 @@ newKeys :: MarkContext -> IO (KeyMap l)
 newKeys markContext =
     return $ \config@(XConfig {modMask = modm}) ->
       Map.fromList
-        [ ((modm, xK_F12), (void $ spawn "spotify-control next"))
-        , ((modm, xK_F11), (void $ spawn "spotify-control prev"))
-        , ((modm, xK_semicolon), scratchpadSpawnActionTerminal "scratchpad")
-        , ((modm, xK_F10), (void $ spawn "spotify-control play"))
-        , ((modm, xK_r),   runDMenu)
-        , ((modm, xK_c),   runPassMenu)
+        [ ((modm,               xK_F12), (void $ spawn "spotify-control next"))
+        , ((modm,               xK_F11), (void $ spawn "spotify-control prev"))
+        , ((modm,               xK_semicolon), scratchpadSpawnActionTerminal "scratchpad")
+        , ((modm,               xK_F10), (void $ spawn "spotify-control play"))
+        , ((modm,               xK_r),   runDMenu)
+        , ((modm,               xK_c),   runPassMenu)
+        , ((modm,               xK_h),   windows W.focusDown)
+        , ((modm,               xK_l),   windows W.focusUp)
+        , ((modm .|. shiftMask, xK_h),   windows W.swapUp)
+        , ((modm .|. shiftMask, xK_l),   windows W.swapDown)
+        , ((modm              , xK_Return),   windows W.swapMaster)
+        , ((modm,               xK_j),   sendMessage Shrink)
+        , ((modm,               xK_k),   sendMessage Expand)
         , ((modm .|. shiftMask, xK_r),   (void $ spawn "gmrun"))
-        , ((modm .|. mod1Mask, xK_l), (void $ spawn "xsecurelock"))
-        , ((modm .|. mod1Mask, xK_s), (void $ spawn "sudo systemctl suspend && xsecurelock"))
+        , ((modm .|. mod1Mask,  xK_l), (void $ spawn "xsecurelock"))
+        , ((modm .|. mod1Mask,  xK_s), (void $ spawn "sudo systemctl suspend && xsecurelock"))
         , ((modm .|. shiftMask, xK_c), kill)
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
-        , ((mod4Mask, xK_BackSpace),  (void $ spawn "xterm"))
-        , ((mod3Mask, xK_BackSpace),  (void $ spawn "pkill -SIGUSR1 xmobar"))
-        , ((mod3Mask, xK_t),  (void $ spawn (terminal config)))
-        , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
-        , ((modm, xK_w), runXPlus markContext config windowJump)
-        , ((modm, xK_apostrophe), (submap $
+        , ((mod4Mask,           xK_BackSpace),  (void $ spawn "xterm"))
+        , ((modm,               xK_BackSpace),  (void $ spawn "pkill -SIGUSR1 xmobar"))
+        , ((modm,               xK_t),  (void $ spawn (terminal config)))
+        , ((modm,               xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
+        , ((modm,               xK_w), runXPlus markContext config windowJump)
+        , ((modm,               xK_apostrophe), (submap $
               Map.insert
                 (modm, xK_apostrophe)
                 (jumpToLast markContext)
                 (mapAlpha modm (jumpToMark markContext))))
+
+        , ((modm .|. shiftMask, xK_apostrophe), (submap $
+              Map.insert
+                (modm .|. shiftMask, xK_apostrophe)
+                (swapWithLastMark markContext)
+                (mapAlpha (modm .|. shiftMask) (swapWithMark markContext))))
 
         , ((modm, xK_g), (submap $
             mapNumbersAndAlpha 0 (

@@ -2,6 +2,7 @@
 module Internal.Marking where
 
 import XMonad
+import XMonad.StackSet hiding (focus)
 import Data.IORef
 import Data.Map (Map)
 
@@ -77,3 +78,58 @@ jumpToMark ctx@(MarkContext ioref) mark = do
       focus w
 
   saveMarkState =<< liftIO (readIORef ioref)
+
+mapWindows :: (Ord a, Ord b) => (a -> b) -> StackSet i l a s sd -> StackSet i l b s sd
+mapWindows fn (StackSet cur vis hid float) =
+  StackSet
+    (mapWindowsScreen cur)
+    (map mapWindowsScreen vis)
+    (map mapWindowsWorkspace hid)
+    (Map.mapKeys fn float)
+  where
+    mapWindowsScreen (Screen work a b) = Screen (mapWindowsWorkspace work) a b
+    mapWindowsWorkspace (Workspace t l stack) =
+      Workspace t l (fmap (mapStack fn) stack)
+
+-- | What genius decided to hide the instances for the Stack type!!???
+mapStack :: (a -> b) -> Stack a -> Stack b
+mapStack fn (Stack focus up down) = Stack (fn focus) (map fn up) (map fn down)
+
+setFocusedWindow :: a -> StackSet i l a s sd -> StackSet i l a s sd
+setFocusedWindow
+  window
+  (StackSet (Screen (Workspace t l stack) a b) vis hid float) =
+    let newStack =
+          case stack of
+            Nothing -> Nothing
+            Just (Stack _ up down) -> Just (Stack window up down) in
+    (StackSet (Screen (Workspace t l newStack) a b) vis hid float)
+
+swapWithFocused :: (Ord a) => a -> StackSet i l a s sd -> StackSet i l a s sd
+swapWithFocused winToSwap stackSet =
+  case peek stackSet of
+    Nothing -> stackSet
+    Just focused -> do
+       setFocusedWindow winToSwap $
+          mapWindows (
+            \w -> if w == winToSwap then focused else w) stackSet
+
+swapWithLastMark :: MarkContext -> X ()
+swapWithLastMark ctx@(MarkContext ioref) = do
+  MarkState {markStateMap = m} <- liftIO $ readIORef ioref
+  m <- markLast <$> (liftIO $ readIORef ioref)
+  saveLastMark ctx
+
+  case m of
+    Nothing -> return ()
+    Just win -> windows $ swapWithFocused win
+
+swapWithMark :: MarkContext -> Mark -> X ()
+swapWithMark ctx@(MarkContext ioref) mark = do
+  MarkState {markStateMap = m} <- liftIO $ readIORef ioref
+  saveLastMark ctx
+
+  case Map.lookup mark m of
+    Nothing -> return ()
+    Just winToSwap ->
+      windows $ swapWithFocused winToSwap
