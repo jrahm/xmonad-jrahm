@@ -13,7 +13,7 @@ char* icons[] = {
   "",
   "",
   "",
-  "",
+  "",
   "",
   "",
   "",
@@ -162,14 +162,22 @@ uint32_t percentage_to_color(int percentage)
   return hsv_to_rgb(h, s, v);
 }
 
-void get_time_left(char* buf, size_t sz, llong_t energy, llong_t power)
+void get_time_left(
+    char* buf,
+    size_t sz,
+    llong_t energy,
+    llong_t power)
 {
+  if (power == 0) {
+    buf[0] = 0;
+    return;
+  }
   llong_t minutes_left = energy * 60 / power;
 
   llong_t hours = minutes_left / 60;
   llong_t minutes = minutes_left % 60;
 
-  snprintf(buf, sz - 1, "%2lluh%2llum", hours, minutes);
+  snprintf(buf, sz - 1, "%lluh%2llum", hours, minutes);
   buf[sz - 1] = 0;
 }
 
@@ -177,9 +185,12 @@ int main(int argc, char** argv)
 {
   char* icon;
   char timeleft[128];
+  char watts[128];
+  char percent[128];
 
   llong_t capacity;
   llong_t energy_now;
+  llong_t energy_full;
   llong_t ac_online;
   llong_t power;
 
@@ -206,18 +217,37 @@ int main(int argc, char** argv)
   ac_online = !! ac_online;
 
   int percentage = (int) capacity;
-  if (percentage >= 100) {
+  if (percentage >= 98) {
     icon = icons[10 + ac_online];
   } else {
     int quintile = percentage / 20;
     icon = icons[quintile + (5 * ac_online) ];
   }
 
-  get_time_left(timeleft, sizeof(timeleft), energy_now, power);
+  if (ac_online) {
+    if ((energy_full = get_energy_full()) < 0) {
+      fprintf(stderr, "Unable to get current energy.");
+      goto fail;
+    }
+    get_time_left(timeleft, sizeof(timeleft), energy_full - energy_now, power);
+  } else {
+    get_time_left(timeleft, sizeof(timeleft), energy_now, power);
+  }
 
-  double dpower = power / 1000000.0;
+  watts[0] = 0;
+  percent[0] = 0;
+  if (power) {
+    double dpower = power / 1000000.0;
+    snprintf(watts, sizeof(watts), "%2.1fW ", dpower);
+  }
+
+  if (percentage < 99 || ! ac_online) {
+    snprintf(percent, sizeof(percent), "%2d%% ", percentage);
+  }
+
   uint32_t color = percentage_to_color(percentage);
-  printf("<fc=#%06x>%s </fc><fc=#8888ff>%d%% %2.1fW %s</fc>", color, icon, percentage, dpower, timeleft);
+  printf("<fc=#%06x>%s </fc><fn=3><fc=#a0a0a0>%s%s%s</fc></fn>",
+      color, icon, percent, watts, timeleft);
   return 0;
 
 fail:

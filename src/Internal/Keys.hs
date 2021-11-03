@@ -85,7 +85,8 @@ newKeys markContext =
         , ((modm .|. mod1Mask, xK_s), (void $ spawn "sudo systemctl suspend && xsecurelock"))
         , ((modm .|. shiftMask, xK_c), kill)
         , ((modm .|. shiftMask, xK_t), withFocused $ windows . W.sink)
-        , ((mod4Mask, xK_Escape),  (void $ spawn "xterm"))
+        , ((mod4Mask, xK_BackSpace),  (void $ spawn "xterm"))
+        , ((mod3Mask, xK_BackSpace),  (void $ spawn "pkill -SIGUSR1 xmobar"))
         , ((mod3Mask, xK_t),  (void $ spawn (terminal config)))
         , ((modm, xK_m), (submap $ mapAlpha modm (markCurrentWindow markContext)))
         , ((modm, xK_w), runXPlus markContext config windowJump)
@@ -121,6 +122,9 @@ newKeys markContext =
 
         , ((modm, xK_q), spawn "xmonad --recompile && xmonad --restart")
         , ((modm, xK_z), sendMessage ToggleZoom)
+
+        , ((modm, xK_x), spawn "bluetooth-select.sh")
+        , ((modm .|. shiftMask, xK_x), spawn "bluetoothctl -- disconnect")
 
         , ((modm, xK_Tab), windows W.focusDown)
         , ((modm .|. shiftMask, xK_Tab), windows W.focusUp)

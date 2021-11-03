@@ -1,0 +1,71 @@
+Config
+   { font = "xft:Monofur Nerd Font:size=15"
+   , additionalFonts = [
+       "xft:Monofur bold Nerd Font:style=bold:size=12",
+       "xft:Monofur Nerd Font:size=9",
+       "xft:Monofur bold Nerd Font:size=9",
+       "xft:Monofur Nerd Font:size=6",
+       "xft:Monofur bold Nerd Font:size=40",
+       "xft:Monofur Nerd Font:style=bold:size=12"
+       ]
+   , borderColor = "black"
+   , border = FullBM -1
+   , borderWidth = 2
+   , bgColor = "#17171b"
+   , fgColor = "white"
+   , alpha = 250                 -- default: 255
+   , position = TopSize L 100 40
+   , textOffset = -1             -- default: -1
+   , iconOffset = -1             -- default: -1
+   , lowerOnStart = True
+   , pickBroadest = False        -- default: False
+   , persistent = True
+   , hideOnStart = False
+   , iconRoot = "/usr/local/google/home/rahm/.xmonad/resources"  -- default: "."
+   , allDesktops = True          -- default: True
+   , overrideRedirect = False    -- default: True
+   , sepChar = "%"
+   , alignSep = "}{"
+   , template =
+      " %logo%  <fc=#a0a0a0><fn=3>%uname%</fn></fc><fc=#404040> │\
+      \</fc><fc=#a0a0a0> %date%</fc><fc=#404040> │ \
+      \</fc>%StdinReader%}<fn=1><fc=#8888ff>%time%</fc></fn>\
+      \{ %cpu% <fc=#404040>\
+      \│</fc> %KLMO% <fc=#404040>│\
+      \</fc> <fc=#a0a0a0>%mpris2%</fc> <fc=#404040>│ \
+      \</fc>%bluetooth%%bat% "
+   , commands = [
+       Run StdinReader,
+       Run Memory ["-t", "<usedbar>"] 10,
+       Run Date "%H:%M:%S" "time" 10,
+       Run Date "<fn=3>%m/%d</fn>" "date" 10,
+       Run Cpu [
+         "-t", "<fn=3><fc=#000000><bar></fc></fn>",
+         "-L", "3",
+         "-H", "50",
+         "-b", "─",
+         "-f", "─",
+         "--normal", "green",
+         "--high", "red"
+       ] 10,
+       Run WeatherX "KLMO"
+             [ ("clear", "<fc=#ddcf04>")
+             , ("sunny", "<fc=#ddcf04>")
+             , ("mostly clear", "<fc=#ddcf04>")
+             , ("mostly sunny", "<fc=#ddcf04>")
+             , ("partly sunny", "<fc=#ddcf04>")
+             , ("fair", "<fc=#a0a0a0>🌑")
+             , ("cloudy","<fc=#a0a0a0>摒")
+             , ("overcast","<fc=#808080>")
+             , ("partly cloudy", "<fc=#a0a0a0>杖")
+             , ("mostly cloudy", "<fc=#808080>")
+             , ("considerable cloudiness", "<fc=#a0a0a0>ﭽ")]
+             ["--template", "<skyConditionS></fc><fn=3><fc=#a0a0a0>   \
+             \<tempF>°F</fc></fn>"] 360000,
+       Run Mpris2 "spotify" ["-t", "<fc=#1aa54b></fc>  <fn=3><title></fn>"] 20,
+       Run Com ".xmonad/xmobar-logo" [] "logo" 0,
+       Run Com "uname" ["-r"] "uname" 0,
+       Run Com ".xmonad/xmobar-bluetooth" [] "bluetooth" 50,
+       Run Com ".xmonad/xmobar-battery" [] "bat" 20
+     ]
+   }

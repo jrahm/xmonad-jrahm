@@ -1,0 +1,18 @@
+#!/bin/sh
+
+cur=""
+
+bluetoothctl -- info | while read line ; do
+  key=${line%%: *}
+  value=${line//*: }
+
+  if [ "$key" == "Name" ] ; then
+    cur="$value"
+  fi
+
+  if [ "$key" == "Connected" -a "$value" == "yes" ] ; then
+    exec echo "<fc=#4287f5></fc> <fc=#a0a0a0><fn=3>$cur</fn></fc> <fc=#404040>│</fc> "
+  fi
+done
+
+exec echo "<fc=#a0a0a0></fc> <fc=#404040>│</fc>"

@@ -58,7 +58,7 @@ main = do
       "xmobar"
       xmobarPP {
                  ppCurrent = xmobarColor "#ff8888" "red" . printf "<fn=1>%s</fn>"
-               , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=0>%s</fn>"
+               , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=6>%s</fn>"
                , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
                , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
                , ppTitle =

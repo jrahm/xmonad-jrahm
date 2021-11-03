@@ -4,11 +4,23 @@ real_dir=$(dirname $(readlink -f "$0"))
 cd "$real_dir"
 
 mkdir -p "$HOME/.xmonad"
+mkdir -p "$HOME/.config"
 
-cc -o ~/.xmonad/xmobar-battery xmobar/extras/battery/battery.c -lm
+mkdir -p build/extras/HOME/.xmonad
 
-ln -sfv "$real_dir/build-script.sh" "$HOME/.xmonad/build"
-ln -sfv "$real_dir/compton.conf" "$HOME/.config/compton.conf"
-ln -sfv "$real_dir/startup" "$HOME/.xmonad/startup"
-ln -sfv "$real_dir/xmobarrc" "$HOME/.xmobarrc"
-ln -sfv "$real_dir/assets/wallpaper.jpg" "$HOME/.xmonad/wallpaper.jpg"
+cc -o \
+  build/extras/HOME/.xmonad/xmobar-battery \
+  xmobar/extras/battery/battery.c \
+  -lm
+
+GLOBIGNORE=".:.."
+shopt -u dotglob
+
+cd "$HOME"
+cp -rsvf                           \
+  "$real_dir"/extras/HOME/*        \
+  "$real_dir"/extras/HOME/.*       \
+  "$real_dir"/build/extras/HOME/*  \
+  "$real_dir"/build/extras/HOME/.* \
+  .
+cd "$real_dir"
