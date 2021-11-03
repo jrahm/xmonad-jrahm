@@ -67,15 +67,13 @@ main = do
              , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
              , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
              , ppTitle =
-                 xmobarColor "#808080" "" .
-                    printf "<fn=3><fc=#bbbbbb>%s</fc></fn>" .
-                      parseOut .
-                        trunc 50
+                 xmobarColor "#a0a0a0" "" .
+                    printf "<fn=3><fc=#bbbbbb>%s</fc></fn>"
 
              , ppSep = xmobarColor "#404040" "" " │ "
              , ppLayout = const (fromMaybe "" layout)
              , ppExtras = []
-             , ppOutput = hPutStrLn xmproc
+             , ppOutput = hPutStrLn xmproc . reverse . trunc 80
              , ppOrder =  \ss ->
                  let (icons, etc) = partition ("<icon"`isPrefixOf`) ss
                      in icons ++ etc
@@ -87,17 +85,20 @@ main = do
   xmonad config
 
   where
-    parseOut :: String -> String
-    parseOut str =
-      let colors = ["#ff878f", "#e187ff", "#8f87ff", "#87fff7", "#8bff87", "#ffe987", "#ff8787"]
-          components = zip (cycle colors) (splitOnAll [" - ", " | ", " · ", " "] str)
-          in  concatMap (\(color, str) ->
-                  printf "<fc=%s>%s</fc> " color str) components
-
-    trunc amt str =
-      if length str > amt - 4
-        then take (amt - 4) str ++ " ..."
-        else str
+    trunc amt str = trunc' False amt str []
+    trunc' _ _ [] acc = acc
+    trunc' ignore amt (a:as) acc =
+      case a of
+        '<' -> trunc' True amt as (a : acc)
+        '>' -> trunc' False amt as (a : acc)
+        _ ->
+          if ignore
+            then trunc' True amt as (a : acc)
+            else
+              case amt of
+                0 -> trunc' False 0 as acc
+                4 -> trunc' False 0 as ("... " ++ acc)
+                _ -> trunc' False (amt - 1) as (a : acc)
 
     splitOnAll arr str = splitOnAll' arr [str]
     splitOnAll' [] str = str

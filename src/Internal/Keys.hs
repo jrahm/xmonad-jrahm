@@ -101,6 +101,8 @@ newKeys markContext =
         , ((modm,               xK_t),          (void $ spawn (terminal config)))
         , ((modm,               xK_m),          (submap $ mapAlpha modm (markCurrentWindow markContext)))
         , ((modm,               xK_w),          runXPlus markContext config windowJump)
+        , ((modm,               xK_space),      sendMessage NextLayout)
+        , ((modm .|. shiftMask, xK_space),      sendMessage FirstLayout)
         , ((modm,               xK_apostrophe), (submap $
               Map.insert
                 (modm, xK_apostrophe)
