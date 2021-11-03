@@ -12,23 +12,27 @@ import XMonad.Layout.Spiral
 import XMonad.Layout.ThreeColumns
 import XMonad.Layout.Grid
 import XMonad.Layout.Dishes
+import XMonad.Layout.MosaicAlt
 import XMonad.Layout
 import XMonad.Layout.LayoutModifier
 import XMonad
 import XMonad.Core
 
+import qualified Data.Map as M
 import qualified XMonad.StackSet as W
 
 myLayout =
   ModifiedLayout (Zoomable False 0.05 0.05) $
     ModifiedLayout (Flippable False) $
-      spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts $
-        spiral (6/7) |||
-        Tall 1 (3/100) (1/2) |||
-        ThreeCol 1 (3/100) (1/2) |||
-        Full |||
-        Grid |||
-        Dishes 2 (1/6)
+      ModifiedLayout (HFlippable False) $
+        spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $ avoidStruts $
+          spiral (6/7) |||
+          Tall 1 (3/100) (1/2) |||
+          ThreeCol 1 (3/100) (1/2) |||
+          Full |||
+          Grid |||
+          Dishes 2 (1/6) |||
+          (MosaicAlt M.empty :: MosaicAlt Window)
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
 
@@ -37,7 +41,12 @@ instance Message ResizeZoom where
 data Flippable a = Flippable Bool -- True if flipped
   deriving (Show, Read)
 
+data HFlippable a = HFlippable Bool -- True if flipped
+  deriving (Show, Read)
+
 data FlipLayout = FlipLayout deriving (Typeable)
+
+data HFlipLayout = HFlipLayout deriving (Typeable)
 
 data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused window.
   deriving (Show, Read)
@@ -47,15 +56,18 @@ data ToggleZoom = ToggleZoom
 
 instance Message FlipLayout where
 
+instance Message HFlipLayout where
+
 instance Message ToggleZoom where
 
 instance (Eq a) => LayoutModifier Flippable a where
-  pureModifier (Flippable flip) (Rectangle _ _ sw _) stack returned =
+  pureModifier (Flippable flip) (Rectangle sx _ sw _) stack returned =
     if flip 
       then (map (second doFlip) returned, Nothing)
       else (returned, Nothing)
     where
-      doFlip (Rectangle x y w h) = Rectangle (fromIntegral sw - x - fromIntegral w) y w h
+      doFlip (Rectangle x y w h) =
+        Rectangle ((sx + fromIntegral sw) - x - fromIntegral w + sx) y w h
 
   pureMess (Flippable flip) message = 
     case fromMessage message of
@@ -66,6 +78,26 @@ instance (Eq a) => LayoutModifier Flippable a where
     let descr = description underlying in
       if flipped
         then descr ++ " Flipped"
+        else descr
+
+instance (Eq a) => LayoutModifier HFlippable a where
+  pureModifier (HFlippable flip) (Rectangle _ sy _ sh) stack returned =
+    if flip 
+      then (map (second doFlip) returned, Nothing)
+      else (returned, Nothing)
+    where
+      doFlip (Rectangle x y w h) =
+        Rectangle x ((sy + fromIntegral sh) - y - fromIntegral h + sy) w h
+
+  pureMess (HFlippable flip) message = 
+    case fromMessage message of
+      Just HFlipLayout -> Just (HFlippable (not flip))
+      Nothing -> Nothing
+
+  modifyDescription (HFlippable flipped) underlying =
+    let descr = description underlying in
+      if flipped
+        then descr ++ " HFlipped"
         else descr
     
 

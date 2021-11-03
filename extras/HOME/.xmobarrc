@@ -5,7 +5,7 @@ Config
        "xft:Monofur Nerd Font:size=9",
        "xft:Monofur bold Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=6",
-       "xft:Monofur bold Nerd Font:size=40",
+       "xft:Monofur bold Nerd Font:size=15",
        "xft:Monofur Nerd Font:style=bold:size=12"
        ]
    , borderColor = "black"
@@ -57,9 +57,9 @@ Config
          "--high", "red"
        ] 10,
        Run WeatherX "KLMO"
-             [ ("clear", "<fc=#ddcf04>")
+             [ ("clear", "<fc=#00a3c4>")
              , ("sunny", "<fc=#ddcf04>")
-             , ("mostly clear", "<fc=#ddcf04>")
+             , ("mostly clear", "<fc=#00a3c4>")
              , ("mostly sunny", "<fc=#ddcf04>")
              , ("partly sunny", "<fc=#ddcf04>")
              , ("fair", "<fc=#a0a0a0>🌑")

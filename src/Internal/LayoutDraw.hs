@@ -10,6 +10,7 @@ import Control.Monad
 import Graphics.Rendering.Cairo
 import Graphics.Rendering.Cairo.Internal (Render(runRender))
 import Graphics.Rendering.Cairo.Types (Cairo(Cairo))
+import Control.Concurrent (threadDelay)
 
 import System.FilePath
 import XMonad
@@ -85,7 +86,7 @@ drawPng l = do
 
             surfaceWriteToPNG surface filepathPng
 
-            (!_) <- readProcessWithExitCode
+            out <- readProcessWithExitCode
               "/usr/bin/convert"
               [filepathPng, filepathXpm]
               ""

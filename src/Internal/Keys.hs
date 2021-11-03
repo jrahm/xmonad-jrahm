@@ -1,6 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Internal.Keys where
 
+import XMonad.Layout.MosaicAlt
 import Graphics.X11.ExtraTypes.XorgDefault
 import System.Process
 import XMonad.Util.Ungrab
@@ -84,6 +85,7 @@ newKeys markContext =
         , ((modm .|. shiftMask, xK_h),          windows W.swapUp)
         , ((modm .|. shiftMask, xK_l),          windows W.swapDown)
         , ((modm              , xK_f),          sendMessage FlipLayout)
+        , ((modm .|. shiftMask, xK_f),          sendMessage HFlipLayout)
         , ((modm              , xK_Return),     windows W.swapMaster)
         , ((modm,               xK_j),          sendMessage Shrink)
         , ((modm,               xK_k),          sendMessage Expand)
@@ -92,6 +94,8 @@ newKeys markContext =
         , ((modm .|. mod1Mask,  xK_s),          (void $ spawn "sudo systemctl suspend && xsecurelock"))
         , ((modm .|. shiftMask, xK_c),          kill)
         , ((modm .|. shiftMask, xK_t),          withFocused $ windows . W.sink)
+        , ((modm,               xK_comma),      withFocused $ sendMessage . shrinkWindowAlt)
+        , ((modm,               xK_period),     withFocused $ sendMessage . expandWindowAlt)
         , ((mod4Mask,           xK_BackSpace),  (void $ spawn "xterm"))
         , ((modm,               xK_BackSpace),  (void $ spawn "pkill -SIGUSR1 xmobar"))
         , ((modm,               xK_t),          (void $ spawn (terminal config)))
