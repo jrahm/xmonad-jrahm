@@ -49,11 +49,6 @@ main = do
   xmproc <- spawnPipe "xmobar"
   hSetEncoding xmproc utf8
 
-  logFile <- openFile "/tmp/xmonad.log" WriteMode 
-
-  hPutStrLn logFile "·······························"
-  hFlush logFile
-
   config <-
     applyKeys $ def
        { terminal    = "alacritty"
@@ -101,7 +96,7 @@ main = do
                  tell " </fc></fn>"
 
                tell $ xmobarColor "#404040" "" "│ "
-               tell $ "<fc=#808080><fn=3>"
+               tell $ "<fc=#a0a0a0><fn=3>"
                tell $ title
                tell $ "</fn></fc>"
        }
@@ -111,22 +106,22 @@ main = do
   xmonad (docks config)
 
   where
-    trunc amt str = trunc' False amt str
-
-    trunc' :: Bool -> Int -> String -> String
-    trunc' _ _ [] = []
-    trunc' ignore amt (a:as) =
+    trunc amt str = reverse $ trunc' False amt str []
+    
+    trunc' :: Bool -> Int -> String -> String -> String
+    trunc' _ _ [] acc = acc
+    trunc' ignore amt (a:as) acc =
       case a of
-        '<' -> a : trunc' True amt as
-        '>' -> a : trunc' False amt as
+        '<' -> trunc' True amt as (a : acc)
+        '>' -> trunc' False amt as (a : acc)
         _ ->
           if ignore
-            then a : trunc' True amt as
+            then trunc' True amt as (a : acc)
             else
               case amt of
-                0 -> trunc' False 0 as
-                3 -> "..." ++ trunc' False 0 as
-                _ ->  a : trunc' False (amt - 1) as
+                0 -> trunc' False 0 as acc
+                3 -> trunc' False 0 as ("..." ++ acc)
+                _ -> trunc' False (amt - 1) as (a : acc)
 
     splitOnAll arr str = splitOnAll' arr [str]
     splitOnAll' [] str = str

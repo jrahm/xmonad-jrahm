@@ -57,7 +57,7 @@ Config
          "--high", "red"
        ] 10,
        Run WeatherX "KLMO"
-             [ ("clear", "<fc=#00a3c4>")
+             [ ("clear", "<fc=#ddcf04>")
              , ("sunny", "<fc=#ddcf04>")
              , ("mostly clear", "<fc=#00a3c4>")
              , ("mostly sunny", "<fc=#ddcf04>")
