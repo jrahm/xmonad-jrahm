@@ -97,14 +97,19 @@ data HFlipLayout = HFlipLayout deriving (Typeable)
 data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused window.
   deriving (Show, Read)
 
-data ToggleZoom = ToggleZoom
+-- Toggles if the current window should be zoomed or not. Set the boolean
+-- to set the zoom.
+data ZoomModifier =
+       ToggleZoom |
+       Zoom |
+       Unzoom
   deriving (Typeable)
 
 instance Message FlipLayout where
 
 instance Message HFlipLayout where
 
-instance Message ToggleZoom where
+instance Message ZoomModifier where
 
 instance (Eq a) => LayoutModifier Flippable a where
   pureModifier (Flippable flip) (Rectangle sx _ sw _) stack returned =
@@ -179,6 +184,8 @@ instance (Eq a) => LayoutModifier Zoomable a where
                       ExpandZoom -> 1) * 0.02
 
         handleZoom ToggleZoom = Zoomable (not showing) sw sh
+        handleZoom Zoom = Zoomable True sw sh
+        handleZoom Unzoom = Zoomable False sw sh
 
         guard f | f > 1 = 1
                 | f < 0 = 0

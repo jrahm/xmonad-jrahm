@@ -1,34 +1,5 @@
 import XMonad
 
--- import Control.Concurrent
--- import Control.Exception
--- import Control.Monad
--- import Control.Monad (when)
--- import Control.Monad.Writer
--- import Data.Ord
--- import Data.List (partition, isPrefixOf, sortBy)
--- import Data.List.Split
--- import Data.Maybe
--- import Internal.Keys
--- import Internal.Layout
--- import Internal.LayoutDraw
--- import Internal.XMobarLog
--- import System.Directory
--- import System.FilePath
--- import System.IO
--- import System.Process
--- import Text.Printf
--- import XMonad.Actions.WindowNavigation
--- import XMonad.Hooks.DynamicLog
--- import XMonad.Hooks.EwmhDesktops
--- import XMonad.Hooks.ManageDocks
--- import XMonad.Hooks.ManageHelpers
--- import XMonad.Layout.IndependentScreens
--- import XMonad.Layout.Spacing
--- import XMonad.Util.CustomKeys
--- import XMonad.Util.NamedWindows
--- import XMonad.Util.Run (spawnPipe)
-
 import XMonad.Hooks.ManageDocks (docks)
 import System.Directory (getHomeDirectory)
 import System.FilePath ((</>))

@@ -5,7 +5,7 @@ import Control.Monad.Writer (tell, execWriter)
 import Data.List (sortBy)
 import Data.Maybe (mapMaybe)
 import Data.Ord (comparing)
-import Internal.LayoutDraw (showLayout)
+import Internal.LayoutDraw (drawLayout)
 import System.IO (Handle, hSetEncoding, hPutStrLn, utf8)
 import XMonad.Util.NamedWindows (getName)
 import XMonad.Util.Run (spawnPipe)
@@ -20,6 +20,10 @@ data XMobarLog = XMobarLog Handle
 
 -- The log hook for XMobar. This is a custom log hook that does not use any
 -- of the Xmonad dynamic log libraries.
+--
+-- This is because the given dynamic log libraries don't handle unicode properly
+-- and this has been causing issues. It is also more flexible and frankly easier
+-- to just DIY.
 
 spawnXMobar :: IO XMobarLog
 spawnXMobar = do
@@ -27,9 +31,11 @@ spawnXMobar = do
   hSetEncoding pipe utf8
   return (XMobarLog pipe)
 
+
+-- XMonad Log Hook meant to be used with the XMonad config logHook.
 xMobarLogHook :: XMobarLog -> X ()
 xMobarLogHook (XMobarLog xmproc) = do
-  (_, _, layout) <- showLayout
+  (_, _, layoutXpm) <- drawLayout
 
   winset <- X.gets X.windowset
   title <- maybe (pure "") (fmap show . getName) . S.peek $ winset
@@ -37,7 +43,7 @@ xMobarLogHook (XMobarLog xmproc) = do
 
   X.liftIO $ do
     hPutStrLn xmproc $ trunc 80 $ execWriter $ do
-      mapM_ tell layout
+      tell layoutXpm
       tell $ "<fc=#404040> │ </fc>"
 
       forM_ wss $ \(t, name) -> do
@@ -52,6 +58,8 @@ xMobarLogHook (XMobarLog xmproc) = do
       tell $ title
       tell $ "</fn></fc>"
 
+-- Truncate an XMobar string to the provided number of _visible_ characters.
+-- This is to keep long window titles from overrunning the whole bar.
 trunc :: Int -> String -> String
 trunc amt str = reverse $ trunc' False amt str []
   where
@@ -69,6 +77,8 @@ trunc amt str = reverse $ trunc' False amt str []
                 3 -> trunc' False 0 as ("..." ++ acc)
                 _ -> trunc' False (amt - 1) as (a : acc)
 
+-- Returns all the workspaces with a stack on them and if that workspace is
+-- Visible, Current or Hidden.
 getWorkspaces :: (Ord i) => S.StackSet i l a sid sd -> [(WorkspaceState, i)]
 getWorkspaces (S.StackSet (S.Screen cur _ _) vis hi _) =
   sortBy (comparing snd) $
