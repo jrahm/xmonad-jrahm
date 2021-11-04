@@ -21,6 +21,9 @@ import XMonad hiding (workspaces, Screen)
 import XMonad.StackSet hiding (filter, focus)
 import qualified Data.Map as Map
 import Internal.DMenu
+import Data.Ord (comparing)
+
+import qualified XMonad.StackSet as S
 
 type WorkspaceName = Char
 newtype Selector = Selector (forall a. (Eq a) => a -> [a] -> a)
@@ -30,6 +33,23 @@ data WinPrompt = WinPrompt
 instance XPrompt WinPrompt where
     showXPrompt _ = "[Window] "
     commandToComplete _ = id
+
+data WorkspaceState = Current | Hidden | Visible
+
+-- Returns all the workspaces that are either visible, current or Hidden but
+-- have windows and that workspace's state.
+--
+-- In other words, filters out workspaces that have no windows and are not
+-- visible.
+--
+-- This function will sort the result by the workspace tag.
+getPopulatedWorkspaces ::
+  (Ord i) => S.StackSet i l a sid sd -> [(WorkspaceState, S.Workspace i l a)]
+getPopulatedWorkspaces (S.StackSet (S.Screen cur _ _) vis hi _) =
+  sortBy (comparing (tag . snd)) $
+    mapMaybe (\w@(S.Workspace _ _ s) -> fmap (const (Hidden, w)) s) hi ++
+      map (\(S.Screen w _ _) -> (Visible, w)) vis ++
+        [(Current, cur)]
 
 getHorizontallyOrderedScreens ::
   StackSet wid l a ScreenId ScreenDetail ->
@@ -91,7 +111,7 @@ getString = runQuery $ do
 relativeWorkspaceShift :: Selector -> X ()
 relativeWorkspaceShift (Selector selector) = do
   windows $ \ss ->
-    let tags = sort $ (tag <$> filter (isJust . stack) (workspaces ss))
+    let tags = sort $ (tag . snd <$> getPopulatedWorkspaces ss)
         from = tag $ workspace $ current ss
         to = selector from tags
     in greedyView to ss
