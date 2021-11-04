@@ -23,18 +23,19 @@ import qualified Data.Map as M
 import qualified XMonad.StackSet as W
 
 myLayout =
-  ModifiedLayout (Zoomable False 0.05 0.05) $
-    ModifiedLayout (Flippable False) $
-      ModifiedLayout (HFlippable False) $
-        spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
-          spiral (6/7) |||
-          ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
-          ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
-          Full |||
-          Grid |||
-          Dishes 2 (1/6) |||
-          (MosaicAlt M.empty :: MosaicAlt Window) |||
-          (D.Dwindle D.R D.CW 1.5 1.1)
+  avoidStruts $ 
+    ModifiedLayout (Zoomable False 0.05 0.05) $
+      ModifiedLayout (Flippable False) $
+        ModifiedLayout (HFlippable False) $
+          spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
+            spiral (6/7) |||
+            ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
+            ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
+            Full |||
+            Grid |||
+            Dishes 2 (1/6) |||
+            (MosaicAlt M.empty :: MosaicAlt Window) |||
+            (D.Dwindle D.R D.CW 1.5 1.1)
 
 data ModifyDescription m l a = ModifyDescription m (l a)
   deriving (Show, Read)

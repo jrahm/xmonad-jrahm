@@ -1,28 +1,44 @@
 import XMonad
-import Control.Exception
-import XMonad.Hooks.DynamicLog
+
 import Control.Concurrent
-import XMonad.Layout.Spacing
-import XMonad.Actions.WindowNavigation
-import XMonad.Util.CustomKeys
+import Control.Exception
+import Control.Monad
+import Control.Monad (when)
+import Control.Monad.Writer
+import Data.Ord
+import Data.List (partition, isPrefixOf, sortBy)
+import Data.List.Split
+import Data.Maybe
+import Internal.Keys
+import Internal.Layout
+import Internal.LayoutDraw
 import System.Directory
 import System.FilePath
+import System.IO
 import System.Process
-import Internal.Layout
-import XMonad.Hooks.ManageHelpers
-import XMonad.Layout.IndependentScreens
 import Text.Printf
-import Data.List.Split
+import XMonad.Actions.WindowNavigation
+import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.ManageDocks
+import XMonad.Hooks.ManageHelpers
+import XMonad.Layout.IndependentScreens
+import XMonad.Layout.Spacing
+import XMonad.Util.CustomKeys
+import XMonad.Util.NamedWindows
 import XMonad.Util.Run (spawnPipe)
-import Control.Monad (when)
-import System.IO
 
-import Internal.Keys
-import Internal.LayoutDraw
-import Data.List (partition, isPrefixOf)
-import Data.Maybe
+import qualified XMonad.StackSet as S
+
+data WorkspaceState = Current | Hidden | Visible
+
+getWorkspaces :: (Ord i) => S.StackSet i l a sid sd -> [(WorkspaceState, i)]
+getWorkspaces (S.StackSet (S.Screen cur _ _) vis hi _) =
+  sortBy (comparing snd) $
+    mapMaybe (\(a, S.Workspace t _ s) -> fmap (const (a, t)) s) $
+      map (\w -> (Hidden, w)) hi ++
+        map (\(S.Screen w _ _) -> (Visible, w)) vis ++
+          [(Current, cur)]
 
 
 main = do
@@ -31,9 +47,15 @@ main = do
   let fp = homeDir </> ".xmonad" </> "startup"
 
   xmproc <- spawnPipe "xmobar"
+  hSetEncoding xmproc utf8
+
+  logFile <- openFile "/tmp/xmonad.log" WriteMode 
+
+  hPutStrLn logFile "·······························"
+  hFlush logFile
 
   config <-
-    applyKeys $ docks $ def
+    applyKeys $ def
        { terminal    = "alacritty"
        , modMask     = mod3Mask
        , borderWidth = 2
@@ -41,10 +63,10 @@ main = do
        , focusedBorderColor = "#ff6c00"
        -- , normalBorderColor = "#ffd9bf"
        , normalBorderColor = "#000000"
-       , layoutHook = avoidStruts myLayout
+       , layoutHook = myLayout
        , startupHook = do
           ewmhDesktopsStartup
-          spawn fp
+          spawn fp  
        , manageHook = composeAll [
            isFullscreen --> doFullFloat
          , className =? "Tilda" --> doFloat
@@ -61,44 +83,50 @@ main = do
        , logHook = do
            (_, _, layout) <- showLayout
 
-           dynamicLogWithPP $ xmobarPP {
-               ppCurrent = xmobarColor "#ff8888" "red" . printf "<fn=1>%s</fn>"
-             , ppVisible = xmobarColor "#8888ff" "" . printf "<fn=6>%s</fn>"
-             , ppHidden  = xmobarColor "#888888" "" . printf "<fn=2>%s</fn>"
-             , ppWsSep = "<fn=1><fc=#808080> </fc></fn>"
-             , ppTitle =
-                 xmobarColor "#a0a0a0" "" .
-                    printf "<fn=3><fc=#bbbbbb>%s</fc></fn>"
+           winset <- gets windowset
+           title <- maybe (pure "") (fmap show . getName) . S.peek $ winset
+           let wss = getWorkspaces winset
 
-             , ppSep = xmobarColor "#404040" "" " │ "
-             , ppLayout = const (fromMaybe "" layout)
-             , ppExtras = []
-             , ppOutput = hPutStrLn xmproc . reverse . trunc 80
-             , ppOrder =  \ss ->
-                 let (icons, etc) = partition ("<icon"`isPrefixOf`) ss
-                     in icons ++ etc
-             }
+           liftIO $ do
+             hPutStrLn xmproc $ trunc 80 $ execWriter $ do
+               mapM_ tell layout
+               tell $ xmobarColor "#404040" "" " │ "
+
+               forM_ wss $ \(t, name) -> do
+                 case t of
+                   Current -> tell "<fn=1><fc=#ff8888>"
+                   Visible -> tell "<fn=6><fc=#8888ff>"
+                   Hidden -> tell "<fn=2><fc=#888888>"
+                 tell name
+                 tell " </fc></fn>"
+
+               tell $ xmobarColor "#404040" "" "│ "
+               tell $ "<fc=#808080><fn=3>"
+               tell $ title
+               tell $ "</fn></fc>"
        }
 
   -- let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
 
-  xmonad config
+  xmonad (docks config)
 
   where
-    trunc amt str = trunc' False amt str []
-    trunc' _ _ [] acc = acc
-    trunc' ignore amt (a:as) acc =
+    trunc amt str = trunc' False amt str
+
+    trunc' :: Bool -> Int -> String -> String
+    trunc' _ _ [] = []
+    trunc' ignore amt (a:as) =
       case a of
-        '<' -> trunc' True amt as (a : acc)
-        '>' -> trunc' False amt as (a : acc)
+        '<' -> a : trunc' True amt as
+        '>' -> a : trunc' False amt as
         _ ->
           if ignore
-            then trunc' True amt as (a : acc)
+            then a : trunc' True amt as
             else
               case amt of
-                0 -> trunc' False 0 as acc
-                4 | length as > 3 -> trunc' False 0 as ("... " ++ acc)
-                _ -> trunc' False (amt - 1) as (a : acc)
+                0 -> trunc' False 0 as
+                3 -> "..." ++ trunc' False 0 as
+                _ ->  a : trunc' False (amt - 1) as
 
     splitOnAll arr str = splitOnAll' arr [str]
     splitOnAll' [] str = str
