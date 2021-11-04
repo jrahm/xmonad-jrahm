@@ -1,63 +1,63 @@
 import XMonad
 
-import Control.Concurrent
-import Control.Exception
-import Control.Monad
-import Control.Monad (when)
-import Control.Monad.Writer
-import Data.Ord
-import Data.List (partition, isPrefixOf, sortBy)
-import Data.List.Split
-import Data.Maybe
+-- import Control.Concurrent
+-- import Control.Exception
+-- import Control.Monad
+-- import Control.Monad (when)
+-- import Control.Monad.Writer
+-- import Data.Ord
+-- import Data.List (partition, isPrefixOf, sortBy)
+-- import Data.List.Split
+-- import Data.Maybe
+-- import Internal.Keys
+-- import Internal.Layout
+-- import Internal.LayoutDraw
+-- import Internal.XMobarLog
+-- import System.Directory
+-- import System.FilePath
+-- import System.IO
+-- import System.Process
+-- import Text.Printf
+-- import XMonad.Actions.WindowNavigation
+-- import XMonad.Hooks.DynamicLog
+-- import XMonad.Hooks.EwmhDesktops
+-- import XMonad.Hooks.ManageDocks
+-- import XMonad.Hooks.ManageHelpers
+-- import XMonad.Layout.IndependentScreens
+-- import XMonad.Layout.Spacing
+-- import XMonad.Util.CustomKeys
+-- import XMonad.Util.NamedWindows
+-- import XMonad.Util.Run (spawnPipe)
+
+import XMonad.Hooks.ManageDocks (docks)
+import System.Directory (getHomeDirectory)
+import System.FilePath ((</>))
+import XMonad.Hooks.EwmhDesktops (ewmhDesktopsStartup)
+import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
+import XMonad.Layout.Fullscreen (fullscreenEventHook)
+
+import Internal.XMobarLog
 import Internal.Keys
 import Internal.Layout
-import Internal.LayoutDraw
-import System.Directory
-import System.FilePath
-import System.IO
-import System.Process
-import Text.Printf
-import XMonad.Actions.WindowNavigation
-import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.ManageHelpers
-import XMonad.Layout.IndependentScreens
-import XMonad.Layout.Spacing
-import XMonad.Util.CustomKeys
-import XMonad.Util.NamedWindows
-import XMonad.Util.Run (spawnPipe)
 
+import qualified XMonad as X
 import qualified XMonad.StackSet as S
-
-data WorkspaceState = Current | Hidden | Visible
-
-getWorkspaces :: (Ord i) => S.StackSet i l a sid sd -> [(WorkspaceState, i)]
-getWorkspaces (S.StackSet (S.Screen cur _ _) vis hi _) =
-  sortBy (comparing snd) $
-    mapMaybe (\(a, S.Workspace t _ s) -> fmap (const (a, t)) s) $
-      map (\w -> (Hidden, w)) hi ++
-        map (\(S.Screen w _ _) -> (Visible, w)) vis ++
-          [(Current, cur)]
-
 
 main = do
   -- Execute some commands.
   homeDir <- getHomeDirectory
   let fp = homeDir </> ".xmonad" </> "startup"
 
-  xmproc <- spawnPipe "xmobar"
-  hSetEncoding xmproc utf8
+  xmobar <- spawnXMobar
 
-  config <-
-    applyKeys $ def
+  (=<<) X.xmonad $
+    applyKeys $ docks $ def
        { terminal    = "alacritty"
        , modMask     = mod3Mask
        , borderWidth = 2
        , keys = \config -> mempty
        , focusedBorderColor = "#ff6c00"
-       -- , normalBorderColor = "#ffd9bf"
-       , normalBorderColor = "#000000"
+       , normalBorderColor = "#404040"
        , layoutHook = myLayout
        , startupHook = do
           ewmhDesktopsStartup
@@ -75,56 +75,5 @@ main = do
        , handleEventHook = fullscreenEventHook
        , focusFollowsMouse = False
        , clickJustFocuses = False
-       , logHook = do
-           (_, _, layout) <- showLayout
-
-           winset <- gets windowset
-           title <- maybe (pure "") (fmap show . getName) . S.peek $ winset
-           let wss = getWorkspaces winset
-
-           liftIO $ do
-             hPutStrLn xmproc $ trunc 80 $ execWriter $ do
-               mapM_ tell layout
-               tell $ xmobarColor "#404040" "" " │ "
-
-               forM_ wss $ \(t, name) -> do
-                 case t of
-                   Current -> tell "<fn=1><fc=#ff8888>"
-                   Visible -> tell "<fn=6><fc=#8888ff>"
-                   Hidden -> tell "<fn=2><fc=#888888>"
-                 tell name
-                 tell " </fc></fn>"
-
-               tell $ xmobarColor "#404040" "" "│ "
-               tell $ "<fc=#a0a0a0><fn=3>"
-               tell $ title
-               tell $ "</fn></fc>"
+       , logHook = xMobarLogHook xmobar
        }
-
-  -- let toggleStructsKey XConfig {XMonad.modMask = modMask} = (modMask, xK_b)
-
-  xmonad (docks config)
-
-  where
-    trunc amt str = reverse $ trunc' False amt str []
-    
-    trunc' :: Bool -> Int -> String -> String -> String
-    trunc' _ _ [] acc = acc
-    trunc' ignore amt (a:as) acc =
-      case a of
-        '<' -> trunc' True amt as (a : acc)
-        '>' -> trunc' False amt as (a : acc)
-        _ ->
-          if ignore
-            then trunc' True amt as (a : acc)
-            else
-              case amt of
-                0 -> trunc' False 0 as acc
-                3 -> trunc' False 0 as ("..." ++ acc)
-                _ -> trunc' False (amt - 1) as (a : acc)
-
-    splitOnAll arr str = splitOnAll' arr [str]
-    splitOnAll' [] str = str
-    splitOnAll' (a:as) [str] = splitOnAll' as (splitOn a str)
-    splitOnAll' _ lst = lst
-

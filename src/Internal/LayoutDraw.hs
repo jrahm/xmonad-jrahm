@@ -62,18 +62,12 @@ drawXpmIO l = do
   let iconPath = iconCacheDir </> (quickHash descr ++ ".xpm")
 
   let colors = [
-        "#cc9a9a",
-        "#cc9999",
-        "#cc8080",
-        "#cc6666",
-        "#cc4c4c",
-        "#cc3232",
-        "#cc1818"
-        ]
+        "#cc9a9a", "#cc9999", "#cc8080", "#cc6666",
+        "#cc4c4c", "#cc3232", "#cc1818", "#cc0000" ]
 
   (rects', _) <-
     runLayout
-      (Workspace "0" l (differentiate [1 .. 6]))
+      (Workspace "0" l (differentiate [1 .. 7]))
       (Rectangle 0 0 (w * sf) (h * sf))
 
   let rects = flip map rects' $ \(_, (Rectangle x y w h)) ->
