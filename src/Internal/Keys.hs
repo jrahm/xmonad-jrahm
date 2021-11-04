@@ -95,8 +95,8 @@ newKeys markContext =
         , ((modm .|. mod1Mask,  xK_s),          (void $ spawn "sudo systemctl suspend && xsecurelock"))
         , ((modm .|. shiftMask, xK_c),          kill)
         , ((modm .|. shiftMask, xK_t),          withFocused $ windows . W.sink)
-        , ((modm,               xK_comma),      withFocused $ sendMessage . shrinkWindowAlt)
-        , ((modm,               xK_period),     withFocused $ sendMessage . expandWindowAlt)
+        , ((modm .|. shiftMask, xK_plus),       withFocused $ sendMessage . expandWindowAlt)
+        , ((modm .|. shiftMask, xK_minus),      withFocused $ sendMessage . shrinkWindowAlt)
         , ((mod4Mask,           xK_BackSpace),  (void $ spawn "xterm"))
         , ((modm,               xK_BackSpace),  (void $ spawn "pkill -SIGUSR1 xmobar"))
         , ((modm,               xK_t),          (void $ spawn (terminal config)))
@@ -130,8 +130,8 @@ newKeys markContext =
 
         , ((modm, xK_minus), sendMessage (IncMasterN (-1)))
         , ((modm, xK_plus), sendMessage (IncMasterN 1))
-        , ((modm .|. shiftMask, xK_bracketleft), sendMessage (modifyWindowBorder (-1)))
-        , ((modm .|. shiftMask, xK_bracketright), sendMessage (modifyWindowBorder 1))
+        , ((modm .|. shiftMask, xK_bracketleft), sendMessage (modifyWindowBorder (-5)))
+        , ((modm .|. shiftMask, xK_bracketright), sendMessage (modifyWindowBorder 5))
         , ((modm, xK_bracketleft), sendMessage ShrinkZoom)
         , ((modm, xK_bracketright), sendMessage ExpandZoom)
 
