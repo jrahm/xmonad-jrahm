@@ -3,17 +3,17 @@ Config
    , additionalFonts = [
        "xft:Monofur bold Nerd Font:style=bold:size=12",
        "xft:Monofur Nerd Font:size=9",
-       "xft:Monofur bold Nerd Font:size=9",
+       "xft:Monofur Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=6",
        "xft:Monofur bold Nerd Font:size=15",
-       "xft:Monofur Nerd Font:style=bold:size=12"
+       "xft:Monofur Nerd Font:style=bold:size=10"
        ]
    , borderColor = "black"
    , border = FullBM -1
    , borderWidth = 2
-   , bgColor = "#17171b"
+   , bgColor = "#000000"
    , fgColor = "white"
-   , alpha = 250                 -- default: 255
+   , alpha = 220                 -- default: 255
    , position = TopSize L 100 40
    , textOffset = -1             -- default: -1
    , iconOffset = -1             -- default: -1
@@ -29,7 +29,7 @@ Config
    , template =
       " %logo%  <fc=#a0a0a0><fn=3>%uname%</fn></fc><fc=#404040> │\
       \</fc><fc=#a0a0a0> %date%</fc><fc=#404040> │ \
-      \</fc>%StdinReader%}<fn=1><fc=#8888ff>%time%</fc></fn>\
+      \</fc>%StdinReader%}<fn=6><fc=#909090>%time%</fc></fn>\
       \{ %cpu% %memory% <fc=#404040>\
       \│</fc> %KLMO% <fc=#404040>│\
       \</fc> <fc=#a0a0a0>%mpris2%</fc> <fc=#404040>│ \
@@ -44,8 +44,8 @@ Config
          "-H", "50",
          "-b", "-",
          "-f", "-",
-         "--normal", "green",
-         "--high", "red"
+         "--normal", "#88ff88",
+         "--high", "#ff8888"
        ] 10,
        Run Memory [
          "-t", "<fn=3><fc=#000000><usedbar></fc></fn>",
@@ -53,8 +53,8 @@ Config
          "-H", "50",
          "-b", "-",
          "-f", "-",
-         "--normal", "green",
-         "--high", "red"
+         "--normal", "#88ff88",
+         "--high", "#ff8888"
        ] 10,
        Run WeatherX "KLMO"
              [ ("clear", "<fc=#ddcf04>")
