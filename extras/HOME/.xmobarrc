@@ -1,12 +1,13 @@
 Config
-   { font = "xft:Monofur Nerd Font:size=15"
+   { font = "xft:Monofur Nerd Font:size=12"
    , additionalFonts = [
        "xft:Monofur bold Nerd Font:style=bold:size=12",
        "xft:Monofur Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=6",
        "xft:Monofur bold Nerd Font:size=15",
-       "xft:Monofur Nerd Font:style=bold:size=10"
+       "xft:Monofur Nerd Font:style=bold:size=10",
+       "xft:Noto Sans Mono CJK JP:style=bold:size=10"
        ]
    , borderColor = "black"
    , border = FullBM -1
@@ -14,7 +15,7 @@ Config
    , bgColor = "#000000"
    , fgColor = "white"
    , alpha = 220                 -- default: 255
-   , position = TopSize L 100 40
+   , position = TopSize L 100 50
    , textOffset = -1             -- default: -1
    , iconOffset = -1             -- default: -1
    , lowerOnStart = True

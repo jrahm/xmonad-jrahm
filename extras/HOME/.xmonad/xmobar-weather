@@ -4,8 +4,15 @@ use LWP::Simple;
 use Time::Local;
 use POSIX;
 
+$content = get("https://ipinfo.io");
+
+die "Unable to get IP info" unless defined $content;
+
+($city, $lat, $lon) =
+  ($content =~ m/.*"city":\s+"([^"]+)".*"loc":\s+"(-?[0-9.]+),(-?[0-9.]+).*"/ims);
+
 $content = get(
-  "https://api.sunrise-sunset.org/json?lat=40.1672117&lng=-105.1019286&formatted=0");
+  "https://api.sunrise-sunset.org/json?lat=$lat&lng=$lon&formatted=0");
 
 die "Unable to get sunrise/sunset data" unless defined $content;
 
@@ -40,14 +47,22 @@ if ($current_str gt $sunrise_str and $current_str lt $sunset_str) {
 }
 
 %directions = (
-  NE => "↙",
-  SE => "↖",
-  NW => "↘",
-  SW => "↗",
-  N => "↓",
-  S => "↑",
-  W => "→",
-  E => "←" );
+  NE => "",
+  NNE => "",
+  ENE => "",
+  SE => "",
+  SSE => "",
+  ESE => "",
+  NW => "",
+  NNW => "",
+  WNW => "",
+  SW => "",
+  SSW => "",
+  WSW => "",
+  N => "",
+  S => "",
+  W => "",
+  E => "" );
 
 $dir=%directions{$wind_direction};
 
@@ -83,4 +98,4 @@ if ($is_day) {
   $conditions = %conditions_night{$sky_conditions};  
 }
 
-printf("<fc=#a0a0a0>$dir <fn=3>${wind_speed}mph</fn></fc> $conditions</fc><fn=3>   <fc=#a0a0a0>%.0f°F</fc></fn>\n", $temp);
+printf("<fc=#a0a0a0><fn=3>$city</fn> <fn=3>$dir</fn> <fn=3>${wind_speed}</fn></fc> $conditions</fc><fn=3>   <fc=#a0a0a0>%.0f°F</fc></fn>\n", $temp);
