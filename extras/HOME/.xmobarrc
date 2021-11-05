@@ -31,7 +31,7 @@ Config
       \</fc><fc=#a0a0a0> %date%</fc><fc=#404040> │ \
       \</fc>%StdinReader%}<fn=6><fc=#909090>%time%</fc></fn>\
       \{ %cpu% %memory% <fc=#404040>\
-      \│</fc> %KLMO% <fc=#404040>│\
+      \│</fc> %weather% <fc=#404040>│\
       \</fc> <fc=#a0a0a0>%mpris2%</fc> <fc=#404040>│ \
       \</fc>%bluetooth%%bat% "
    , commands = [
@@ -56,23 +56,10 @@ Config
          "--normal", "#88ff88",
          "--high", "#ff8888"
        ] 10,
-       Run WeatherX "KLMO"
-             [ ("clear", "<fc=#ddcf04>")
-             , ("sunny", "<fc=#ddcf04>")
-             , ("mostly clear", "<fc=#00a3c4>")
-             , ("mostly sunny", "<fc=#ddcf04>")
-             , ("partly sunny", "<fc=#ddcf04>")
-             , ("fair", "<fc=#a0a0a0>🌑")
-             , ("cloudy","<fc=#a0a0a0>摒")
-             , ("overcast","<fc=#808080>")
-             , ("partly cloudy", "<fc=#a0a0a0>杖")
-             , ("mostly cloudy", "<fc=#808080>")
-             , ("considerable cloudiness", "<fc=#a0a0a0>ﭽ")]
-             ["--template", "<skyConditionS></fc><fn=3><fc=#a0a0a0>   \
-             \<tempF>°F</fc></fn>"] 360000,
        Run Mpris2 "spotify" [
            "-t", "<fc=#1aa54b></fc>  <fn=3><title></fn>",
            "--nastring", "<fc=#404040> </fc>"] 20,
+       Run Com ".xmonad/xmobar-weather" [] "weather" 9000,
        Run Com ".xmonad/xmobar-logo" [] "logo" 0,
        Run Com "uname" ["-r"] "uname" 0,
        Run Com ".xmonad/xmobar-bluetooth" [] "bluetooth" 50,

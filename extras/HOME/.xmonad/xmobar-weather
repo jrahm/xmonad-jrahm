@@ -1,0 +1,86 @@
+#!/usr/bin/perl
+
+use LWP::Simple;
+use Time::Local;
+use POSIX;
+
+$content = get(
+  "https://api.sunrise-sunset.org/json?lat=40.1672117&lng=-105.1019286&formatted=0");
+
+die "Unable to get sunrise/sunset data" unless defined $content;
+
+$sunrise_str=$content;
+$sunset_str=$content;
+$sunrise_str =~ s#.*"sunrise":"([^"]*)".*#\1#;
+$sunset_str =~ s#.*"sunset":"([^"]*)".*#\1#;
+$current_str=strftime "%Y-%m-%dT%H:%M:%S+00:00", gmtime();
+
+$content = get(
+  "https://tgftp.nws.noaa.gov/data/observations/metar/decoded/KLMO.TXT");
+
+die "Unable to get weather data" unless defined $content;
+
+$sky_conditions = $content;
+$sky_conditions =~ s#.*Sky conditions:\s+([^\n]+).*#\1#ims;
+$sky_conditions =~ s#\s#_#g;
+
+$wind = $content;
+$wind =~ s#.*Wind:\s+([^\n]+).*#\1#ims;
+($wind_direction, $wind_speed) =
+    ($wind =~ m/from the ([A-Z]+).*at (\d+) MPH.*/g);
+
+
+$temp = $content;
+$temp =~ s#.*Temperature:\s+(-?[0-9.]+) F.*#\1#ims;
+
+if ($current_str gt $sunrise_str and $current_str lt $sunset_str) {
+  $is_day = 1;
+} else {
+  $is_day = 0;
+}
+
+%directions = (
+  NE => "↙",
+  SE => "↖",
+  NW => "↘",
+  SW => "↗",
+  N => "↓",
+  S => "↑",
+  W => "→",
+  E => "←" );
+
+$dir=%directions{$wind_direction};
+
+%conditions_day = (
+  clear => "<fc=#ddcf04>",
+  sunny => "<fc=#ddcf04>",
+  mostly_clear => "<fc=#00a3c4>",
+  mostly_sunny => "<fc=#ddcf04>",
+  partly_sunny => "<fc=#ddcf04>",
+  fair => "<fc=#a0a0a0>🌑",
+  cloudy =>"<fc=#a0a0a0>摒",
+  overcast =>"<fc=#808080>",
+  partly_cloudy => "<fc=#a0a0a0>杖",
+  mostly_cloudy => "<fc=#808080>",
+  considerable_cloudiness => "<fc=#a0a0a0>ﭽ" );
+
+%conditions_night = (
+  clear => "<fc=#00a3c4>",
+  sunny => "<fc=#00a3c4>",
+  mostly_clear => "<fc=#00a3c4>",
+  mostly_sunny => "<fc=#00a3c4>",
+  partly_sunny => "<fc=#00a3c4>",
+  fair => "<fc=#808080>🌑",
+  cloudy =>"<fc=#808080>摒",
+  overcast =>"<fc=#404040>",
+  partly_cloudy => "<fc=#a0a0a0>",
+  mostly_cloudy => "<fc=#808080>",
+  considerable_cloudiness => "<fc=#a0a0a0>ﭽ" );
+
+if ($is_day) {
+  $conditions = %conditions_day{$sky_conditions};
+} else {
+  $conditions = %conditions_night{$sky_conditions};  
+}
+
+printf("<fc=#a0a0a0>$dir <fn=3>${wind_speed}mph</fn></fc> $conditions</fc><fn=3>   <fc=#a0a0a0>%.0f°F</fc></fn>\n", $temp);
