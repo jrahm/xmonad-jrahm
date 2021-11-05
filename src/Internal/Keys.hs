@@ -90,7 +90,7 @@ newKeys markContext =
         , ((modm              , xK_Return),     windows W.swapMaster)
         , ((modm,               xK_j),          sendMessage Shrink)
         , ((modm,               xK_k),          sendMessage Expand)
-        , ((modm .|. shiftMask, xK_r),          (void $ spawn "gmrun"))
+        , ((modm .|. shiftMask, xK_r),          sendMessage DoRotate)
         , ((modm .|. mod1Mask,  xK_l),          (void $ spawn "xsecurelock"))
         , ((modm .|. mod1Mask,  xK_s),          (void $ spawn "sudo systemctl suspend && xsecurelock"))
         , ((modm .|. shiftMask, xK_c),          kill)
