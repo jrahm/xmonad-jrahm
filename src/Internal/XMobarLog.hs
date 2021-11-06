@@ -1,5 +1,6 @@
 module Internal.XMobarLog ( XMobarLog, spawnXMobar, xMobarLogHook ) where
 
+import Control.Arrow (second)
 import Control.Monad (forM_)
 import Control.Monad.Writer (tell, execWriter)
 import Data.List (sortBy)
@@ -10,11 +11,10 @@ import System.IO (Handle, hSetEncoding, hPutStrLn, utf8)
 import XMonad.Util.NamedWindows (getName)
 import XMonad.Util.Run (spawnPipe)
 import XMonad (X)
+import Internal.Lib (getPopulatedWorkspaces, WorkspaceState(..))
 
 import qualified XMonad as X
 import qualified XMonad.StackSet as S
-
-data WorkspaceState = Current | Hidden | Visible
 
 data XMobarLog = XMobarLog Handle
 
@@ -39,19 +39,19 @@ xMobarLogHook (XMobarLog xmproc) = do
 
   winset <- X.gets X.windowset
   title <- maybe (pure "") (fmap show . getName) . S.peek $ winset
-  let wss = getWorkspaces winset
+  let wss = getPopulatedWorkspaces winset
 
   X.liftIO $ do
     hPutStrLn xmproc $ trunc 80 $ execWriter $ do
       tell layoutXpm
       tell $ "<fc=#404040> │ </fc>"
 
-      forM_ wss $ \(t, name) -> do
+      forM_ wss $ \(t, ws) -> do
         case t of
           Current -> tell "<fn=1><fc=#ff8888>"
           Visible -> tell "<fn=6><fc=#8888ff>"
           Hidden -> tell "<fn=2><fc=#888888>"
-        tell name
+        tell (S.tag ws)
         tell " </fc></fn>"
 
       tell $ "<fc=#404040>│ </fc><fc=#a0a0a0><fn=3>"
@@ -76,13 +76,3 @@ trunc amt str = reverse $ trunc' False amt str []
                 0 -> trunc' False 0 as acc
                 3 -> trunc' False 0 as ("..." ++ acc)
                 _ -> trunc' False (amt - 1) as (a : acc)
-
--- Returns all the workspaces with a stack on them and if that workspace is
--- Visible, Current or Hidden.
-getWorkspaces :: (Ord i) => S.StackSet i l a sid sd -> [(WorkspaceState, i)]
-getWorkspaces (S.StackSet (S.Screen cur _ _) vis hi _) =
-  sortBy (comparing snd) $
-    mapMaybe (\(a, S.Workspace t _ s) -> fmap (const (a, t)) s) $
-      map (\w -> (Hidden, w)) hi ++
-        map (\(S.Screen w _ _) -> (Visible, w)) vis ++
-          [(Current, cur)]

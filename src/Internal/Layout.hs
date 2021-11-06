@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module Internal.Layout where 
 
+import Internal.CornerLayout (Corner(..))
 import Control.Arrow (second)
 import XMonad.Hooks.ManageDocks
 import XMonad.Layout.Circle
@@ -24,18 +25,20 @@ import qualified XMonad.StackSet as W
 
 myLayout =
   avoidStruts $ 
-    ModifiedLayout (Zoomable False 0.05 0.05) $
-      ModifiedLayout (Flippable False) $
-        ModifiedLayout (HFlippable False) $
-          spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
-            spiral (6/7) |||
-            ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
-            ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
-            Full |||
-            Grid |||
-            Dishes 2 (1/6) |||
-            (MosaicAlt M.empty :: MosaicAlt Window) |||
-            (D.Dwindle D.R D.CW 1.5 1.1)
+    spacingRaw True (Border 5 5 5 5) True (Border 5 5 5 5) True $
+      ModifiedLayout (Zoomable False 0.05 0.05) $
+        ModifiedLayout (Flippable False) $
+          ModifiedLayout (HFlippable False) $
+            ModifiedLayout (Rotateable False) $
+              spiral (6/7) |||
+              (Corner (3/4) (3/100) :: Corner Window) |||
+              ModifyDescription TallDescriptionModifier (Tall 1 (3/100) (1/2)) |||
+              ModifyDescription ThreeColDescMod (ThreeCol 1 (3/100) (1/2)) |||
+              Full |||
+              Grid |||
+              Dishes 2 (1/6) |||
+              (MosaicAlt M.empty :: MosaicAlt Window) |||
+              (D.Dwindle D.R D.CW 1.5 1.1)
 
 data ModifyDescription m l a = ModifyDescription m (l a)
   deriving (Show, Read)
@@ -90,9 +93,14 @@ data Flippable a = Flippable Bool -- True if flipped
 data HFlippable a = HFlippable Bool -- True if flipped
   deriving (Show, Read)
 
+data Rotateable a = Rotateable Bool -- True if rotated
+  deriving (Show, Read)
+
 data FlipLayout = FlipLayout deriving (Typeable)
 
 data HFlipLayout = HFlipLayout deriving (Typeable)
+
+data DoRotate = DoRotate deriving (Typeable)
 
 data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused window.
   deriving (Show, Read)
@@ -110,6 +118,32 @@ instance Message FlipLayout where
 instance Message HFlipLayout where
 
 instance Message ZoomModifier where
+
+instance Message DoRotate where
+
+instance (Eq a) => LayoutModifier Rotateable a where
+  pureModifier (Rotateable rotate) (Rectangle _ _ sw sh) _ returned =
+    if rotate
+      then (map (second (scaleRect . mirrorRect)) returned, Nothing)
+      else (returned, Nothing)
+    where
+      scaleRect (Rectangle x y w h) = 
+        Rectangle (x * fi sw `div` fi sh)
+                  (y * fi sh `div` fi sw)
+                  (w * sw `div` sh)
+                  (h * sh `div` sw)
+
+      fi = fromIntegral
+
+
+  pureMess (Rotateable rot) mess =
+    fmap (\(DoRotate) -> Rotateable (not rot)) (fromMessage mess)
+
+  modifyDescription (Rotateable rot) underlying =
+    let descr = description underlying in
+      if rot
+        then descr ++ " Rotated"
+        else descr
 
 instance (Eq a) => LayoutModifier Flippable a where
   pureModifier (Flippable flip) (Rectangle sx _ sw _) stack returned =
