@@ -106,7 +106,7 @@ data Zoomable a = Zoomable Bool Float Float -- True if zooming in on the focused
   deriving (Show, Read)
 
 -- Toggles if the current window should be zoomed or not. Set the boolean
--- to set the zoom.
+-- to set the zoom.mhar
 data ZoomModifier =
        ToggleZoom |
        Zoom |
@@ -122,11 +122,14 @@ instance Message ZoomModifier where
 instance Message DoRotate where
 
 instance (Eq a) => LayoutModifier Rotateable a where
-  pureModifier (Rotateable rotate) (Rectangle _ _ sw sh) _ returned =
+  pureModifier (Rotateable rotate) (Rectangle x' y' sw sh) _ returned =
     if rotate
-      then (map (second (scaleRect . mirrorRect)) returned, Nothing)
+      then (map (second (unzero . scaleRect . mirrorRect . zero)) returned, Nothing)
       else (returned, Nothing)
     where
+      zero (Rectangle x y w h) = Rectangle (x - x') (y - y') w h
+      unzero (Rectangle x y w h) = Rectangle (x + x') (y + y') w h
+
       scaleRect (Rectangle x y w h) = 
         Rectangle (x * fi sw `div` fi sh)
                   (y * fi sh `div` fi sw)
