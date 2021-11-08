@@ -1,18 +1,16 @@
 #!/usr/bin/perl
 
-use LWP::Simple;
 use Time::Local;
 use POSIX;
 
-$content = get("https://ipinfo.io");
+$content = `curl https://ipinfo.io`;
 
 die "Unable to get IP info" unless defined $content;
 
 ($city, $lat, $lon) =
   ($content =~ m/.*"city":\s+"([^"]+)".*"loc":\s+"(-?[0-9.]+),(-?[0-9.]+).*"/ims);
 
-$content = get(
-  "https://api.sunrise-sunset.org/json?lat=$lat&lng=$lon&formatted=0");
+$content = `curl "https://api.sunrise-sunset.org/json?lat=$lat&lng=$lon&formatted=0"`;
 
 die "Unable to get sunrise/sunset data" unless defined $content;
 
@@ -22,8 +20,7 @@ $sunrise_str =~ s#.*"sunrise":"([^"]*)".*#\1#;
 $sunset_str =~ s#.*"sunset":"([^"]*)".*#\1#;
 $current_str=strftime "%Y-%m-%dT%H:%M:%S+00:00", gmtime();
 
-$content = get(
-  "https://tgftp.nws.noaa.gov/data/observations/metar/decoded/KLMO.TXT");
+$content = `curl "https://tgftp.nws.noaa.gov/data/observations/metar/decoded/KLMO.TXT"`;
 
 die "Unable to get weather data" unless defined $content;
 

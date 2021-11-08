@@ -38,7 +38,7 @@ myLayout =
               Grid |||
               Dishes 2 (1/6) |||
               (MosaicAlt M.empty :: MosaicAlt Window) |||
-              (D.Dwindle D.R D.CW 1.5 1.1)
+              D.Dwindle D.R D.CW 1.5 1.1
 
 data ModifyDescription m l a = ModifyDescription m (l a)
   deriving (Show, Read)
@@ -82,18 +82,19 @@ instance DescriptionModifier TallDescriptionModifier Tall where
 
 instance DescriptionModifier ThreeColDescMod ThreeCol where
   newDescription _ (ThreeCol mast _ _) _ = "ThreeCol(" ++ show mast ++ ")"
+  newDescription _ (ThreeColMid mast _ _) _ = "ThreeColMid(" ++ show mast ++ ")"
 
 data ResizeZoom = ShrinkZoom | ExpandZoom deriving (Typeable)
 
 instance Message ResizeZoom where
 
-data Flippable a = Flippable Bool -- True if flipped
+newtype Flippable a = Flippable Bool -- True if flipped
   deriving (Show, Read)
 
-data HFlippable a = HFlippable Bool -- True if flipped
+newtype HFlippable a = HFlippable Bool -- True if flipped
   deriving (Show, Read)
 
-data Rotateable a = Rotateable Bool -- True if rotated
+newtype Rotateable a = Rotateable Bool -- True if rotated
   deriving (Show, Read)
 
 data FlipLayout = FlipLayout deriving (Typeable)
@@ -137,7 +138,7 @@ instance (Eq a) => LayoutModifier Rotateable a where
 
 
   pureMess (Rotateable rot) mess =
-    fmap (\(DoRotate) -> Rotateable (not rot)) (fromMessage mess)
+    fmap (\DoRotate -> Rotateable (not rot)) (fromMessage mess)
 
   modifyDescription (Rotateable rot) underlying =
     let descr = description underlying in
@@ -194,17 +195,17 @@ instance (Eq a) => LayoutModifier Zoomable a where
             (zoomed, rest) = partition ((==focused) . Just . fst) returned
          in case zoomed of
               [] -> return (rest, Nothing)
-              ((fwin, _):_) ->  return $ ((fwin, Rectangle (x + wp) (y + hp) (w - fromIntegral (wp * 2)) (h - fromIntegral (hp * 2))) : rest, Nothing)
+              ((fwin, _):_) ->  return ((fwin, Rectangle (x + wp) (y + hp) (w - fromIntegral (wp * 2)) (h - fromIntegral (hp * 2))) : rest, Nothing)
 
       else return (returned, Nothing)
     where
-      wp = floor $ (fromIntegral w) * ws
-      hp = floor $ (fromIntegral h) * hs
+      wp = floor $ fromIntegral w * ws
+      hp = floor $ fromIntegral h * hs
 
   handleMessOrMaybeModifyIt self@(Zoomable showing sw sh) mess =
     return $
       (handleResize <$> fromMessage mess)
-        <|> ((Left . handleZoom) <$> fromMessage mess)
+        <|> (Left . handleZoom <$> fromMessage mess)
       where
         handleResize r =
           if showing

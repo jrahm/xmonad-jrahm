@@ -2,7 +2,7 @@ Config
    { font = "xft:Monofur Nerd Font:size=12"
    , additionalFonts = [
        "xft:Monofur bold Nerd Font:style=bold:size=12",
-       "xft:Monofur Nerd Font:size=9",
+       "xft:Monofur Bold Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=9",
        "xft:Monofur Nerd Font:size=6",
        "xft:Monofur bold Nerd Font:size=15",
@@ -30,7 +30,7 @@ Config
    , template =
       " %logo%  <fc=#a0a0a0><fn=3>%uname%</fn></fc><fc=#404040> │\
       \</fc><fc=#a0a0a0> %date%</fc><fc=#404040> │ \
-      \</fc>%StdinReader%}<fn=6><fc=#909090>%time%</fc></fn>\
+      \</fc>%StdinReader%}<fn=2><fc=#606060>%time%</fc></fn>\
       \{ %cpu% %memory% <fc=#404040>\
       \│</fc> %weather% <fc=#404040>│\
       \</fc> <fc=#a0a0a0>%mpris2%</fc> <fc=#404040>│ \
