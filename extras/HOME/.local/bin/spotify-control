@@ -12,27 +12,63 @@ then
   exit
 fi
 
+function mpris2_dbus_player_do {
+  dbus-send \
+    --print-reply \
+    --dest=org.mpris.MediaPlayer2.spotify \
+    /org/mpris/MediaPlayer2 \
+    "org.mpris.MediaPlayer2.Player.$1"
+}
+
+function mpris2_dbus_get_player_property {
+  dbus-send \
+    --print-reply \
+    --dest=org.mpris.MediaPlayer2.spotify \
+    /org/mpris/MediaPlayer2 \
+    org.freedesktop.DBus.Properties.Get \
+    string:'org.mpris.MediaPlayer2.Player' "string:$1"
+}
+
 case $1 in
     "play")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause
+        mpris2_dbus_player_do PlayPause
         ;;
     "next")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Next
+        mpris2_dbus_player_do Next
         ;;
     "prev")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.Previous
+        mpris2_dbus_player_do Previous
         ;;
     "getTitle")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata'|egrep -A 1 "title"|egrep -v "title"|cut -b 44-|cut -d '"' -f 1|egrep -v ^$
+        mpris2_dbus_get_player_property 'Metadata' | \
+          egrep -A 1 "title" | \
+          egrep -v "title" | \
+          cut -b 44- | \
+          cut -d '"' -f 1 | \
+          egrep -v ^$
         ;;
     "getArtist")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata'|egrep -A 2 "artist"|egrep -v "artist"|egrep -v "array"|cut -b 27-|cut -d '"' -f 1|egrep -v ^$
+        mpris2_dbus_get_player_property 'Metadata' | \
+          -A 2 "artist" | \
+          egrep -v "artist" | \
+          egrep -v "array" | \
+          cut -b 27- | \
+          cut -d '"' -f 1 | \
+          egrep -v ^$
         ;;
     "getAlbum")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'Metadata'|egrep -A 2 "album"|egrep -v "album"|egrep -v "array"|cut -b 44-|cut -d '"' -f 1|egrep -v ^$
+        mpris2_dbus_get_player_property 'Metadata' | \
+          egrep -A 2 "album" | \
+          egrep -v "album" | \
+          egrep -v "array" | \
+          cut -b 44- | \
+          cut -d '"' -f 1 | \
+          egrep -v ^$
         ;;
     "getStatus")
-        dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get string:'org.mpris.MediaPlayer2.Player' string:'PlaybackStatus'|grep 'string "[^"]*"'|sed 's/.*"\(.*\)"[^"]*$/\1/'
+        mpris_dbus_get_player_property 'PlaybackStatus' | \
+          grep 'string "[^"]*"' | \
+          sed 's/.*"\(.*\)"[^"]*$/\1/'
         ;;
     *)
         echo "Unknown command: " $1
